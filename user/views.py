@@ -1,8 +1,6 @@
 from django.shortcuts import render
 import pyrebase
 
-
-
 config={
     "apiKey": "AIzaSyCIKUwbx7V-r7aRTrjfbPWPoNu1NUXg1XE",
     "authDomain": "fyp1-17b8b.firebaseapp.com",
