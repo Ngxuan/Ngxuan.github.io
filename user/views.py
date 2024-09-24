@@ -1,4 +1,5 @@
 
+
 from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
@@ -77,3 +78,4 @@ def choose_profile_view(request):
     # Get all children associated with the logged-in parent
     children = Child.objects.filter(parent=request.user)
     return render(request, 'childAccount.html', {'children': children})
+
