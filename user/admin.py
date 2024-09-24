@@ -1,3 +1,8 @@
-from django.contrib import admin
+# admin.py
 
-# Register your models here.
+from django.contrib import admin
+from .models import Parent, Child
+
+# Basic model registration
+admin.site.register(Parent)
+admin.site.register(Child)
