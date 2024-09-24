@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <title>Choose a Profile</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        html, body {
+            height: 100%; /* Ensure full height for the body */
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: rgba(254, 250, 160, 0.19);
+            text-align: center;
+            margin: 3%;
+            padding: 0;
+        }
+
+        .container {
+            min-height: calc(100vh - 100px); /* Adjust height to leave space for the footer */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Distribute space between children */
+            padding: 50px;
+        }
+
+        h1 {
+            font-size: 36px;
+            color: #333;
+        }
+
+        p {
+            color: #666;
+            font-size: 18px;
+            margin-bottom: 50px;
+        }
+
+        .profiles {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 30px; /* Space between profiles */
+            margin-top:5%;
+        }
+
+        .profile {
+            text-align: center;
+            cursor: pointer;
+            flex: 0 1 150px; /* Set a flex-basis of 150px to maintain profile size */
+        }
+
+        .profile img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .profile img:hover {
+            transform: scale(1.05); /* Slight zoom on hover */
+        }
+
+        .profile-name {
+            margin-top: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .footer {
+
+            margin-top: 10%; /* Push footer to the bottom */
+        }
+
+        .footer a {
+            color: #333;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .lock-icon {
+            font-size: 14px;
+            color: #666;
+            margin-right: 5px;
+        }
+
+        .add-child-btn {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            color: #666;
+            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .add-child-btn:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Choose a profile</h1>
+        <p>Who's using Little Scholar right now?</p>
+
+        <div class="profiles">
+            {% if children %}
+                {% for child in children %}
+                    <div class="profile">
+                        {% if child.image %}
+                            <img src="{{ child.image.url }}" alt="{{ child.name }}">
+                        {% else %}
+                            <img src="{% static 'image/childProfile.png' %}" alt="Default Image">
+                        {% endif %}
+                        <div class="profile-name">{{ child.name }}</div>
+                    </div>
+                {% endfor %}
+                <div class="profile">
+                    <a href="{% url 'add_child_account' %}" class="add-child-btn">+</a>
+                    <div class="profile-name">Add Child</div>
+                </div>
+            {% else %}
+                <div class="profile">
+                    <a href="{% url 'add_child_account' %}" class="add-child-btn">+</a>
+                    <div class="profile-name">Add Child</div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="footer">
+            <a href="#">
+                <span class="lock-icon">🔒</span> Parent Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
