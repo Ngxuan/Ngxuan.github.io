@@ -13,31 +13,42 @@
             font-family: 'Arial', sans-serif;
             background-color: rgba(254, 250, 160, 0.19);
             text-align: center;
-        }
-
-        .container {
-            margin-top: 50px;
+            padding: 0;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         .header {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
             align-items: center;
             padding: 20px;
             background-color: #fff;
             border-bottom: 1px solid #eee;
+            width: 100%;
         }
 
         .header h1 {
+            flex-grow: 1;
             font-size: 24px;
+            text-align: center;
             margin: 0;
         }
 
         .back-button {
             font-size: 24px;
-            font-weight: bold;
             color: #000;
             text-decoration: none;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
         }
 
         .profile-img {
@@ -52,43 +63,56 @@
             border: 3px solid #ddd;
         }
 
+        .profile-section h2 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
         .form-group {
             margin-bottom: 20px;
+            width: 100%;
+            max-width: 300px;
         }
 
         .form-control {
             text-align: center;
             font-size: 18px;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
         }
 
         .create-btn {
             width: 100%;
+            max-width: 300px;
             background-color: #000;
             color: #fff;
             padding: 10px;
             border-radius: 5px;
             border: none;
             font-size: 18px;
+            margin-top: 20px;
         }
 
         .create-btn:hover {
             background-color: #333;
         }
-
     </style>
 </head>
 <body>
 
     <div class="header">
-        <a href="{% url 'choose_profile' %}" class="back-button">  <i class="fa fa-arrow-left"></i></a>
+        <a href="{% url 'choose_profile' %}" class="back-button">
+            <i class="fa fa-arrow-left"></i>
+        </a>
         <h1>Add Child</h1>
-        <div></div> <!-- Just to balance the flex layout -->
     </div>
+
     <div class="container">
         <div class="profile-section">
             <!-- Profile Image -->
             <div class="profile-img" style="background-image: url('https://via.placeholder.com/150');">
-                <!-- Optionally, you could add a button or input for parents to upload an image -->
             </div>
 
             <h2>Create a profile</h2>

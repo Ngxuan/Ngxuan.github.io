@@ -61,7 +61,9 @@
             box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2);
             transition: transform 0.3s ease;
         }
-
+        .profile a{
+             text-decoration: none;
+        }
         .profile img:hover {
             transform: scale(1.05); /* Slight zoom on hover */
         }
@@ -124,12 +126,14 @@
             {% if children %}
                 {% for child in children %}
                     <div class="profile">
-                        {% if child.image %}
-                            <img src="{{ child.image.url }}" alt="{{ child.name }}">
-                        {% else %}
-                            <img src="{% static 'image/childProfile.png' %}" alt="Default Image">
-                        {% endif %}
-                        <div class="profile-name">{{ child.name }}</div>
+                        <a href="{% url 'child_home' child.childID %}">
+                            {% if child.image %}
+                                <img src="{{ child.image.url }}" alt="{{ child.name }}">
+                            {% else %}
+                                <img src="{% static 'image/childProfile.png' %}" alt="Default Image">
+                            {% endif %}
+                            <div class="profile-name">{{ child.name }}</div>
+                        </a>
                     </div>
                 {% endfor %}
                 <div class="profile">

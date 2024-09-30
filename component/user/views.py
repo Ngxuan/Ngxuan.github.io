@@ -1,5 +1,4 @@
 
-
 from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
@@ -10,6 +9,7 @@ from .forms import LoginForm
 from .forms import ChildAccountForm
 from .models import Child
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, get_object_or_404
 
 
 def signup_view(request):
@@ -79,3 +79,7 @@ def choose_profile_view(request):
     children = Child.objects.filter(parent=request.user)
     return render(request, 'childAccount.html', {'children': children})
 
+
+def child_home(request, childID):
+    child = get_object_or_404(Child, childID=childID)
+    return render(request, 'childHome.html', {'child': child})
