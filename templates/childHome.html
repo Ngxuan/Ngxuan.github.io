@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library</title>
+    {% load static %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/super-dessert" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<style>
+  body {
+    font-family: 'Arial', sans-serif;
+    position: relative;
+}
+
+.library-title {
+    font-size: 48px;
+    color: #ffd700;
+    font-family: 'Super Dessert', sans-serif;
+}
+
+/* Back Arrow Styles */
+.back-button {
+    font-size: 30px;
+    color: #000;
+    position: absolute;
+    top: 20px; /* Adjust position to match design */
+    left: 50px; /* Adjust position to match design */
+    text-decoration: none;
+    z-index: 1000; /* Ensure it stays on top */
+    transition: color 0.3s ease;
+}
+
+.back-button:hover {
+    color: #ffd700; /* Change color on hover */
+}
+
+.card {
+    width: 360px; /* Adjust the width */
+    height: 260px; /* Adjust the height */
+    border: none;
+    transition: transform 0.2s ease;
+    margin: 20px;
+}
+
+.cardContainer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+}
+
+.card:hover {
+    transform: scale(1.05);
+}
+
+.card-title {
+    font-size: 18px;
+    text-align: center;
+    color: #333;
+}
+
+.bubble-container {
+    text-align: center;
+}
+
+.bubble {
+    width: 110px;
+    height: 110px;
+    background-color: rgba(173, 216, 230, 0.5); /* Light blue with some transparency */
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Bubble shadow effect */
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.bubble::before {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    width: 30px;
+    height: 30px;
+    background-color: rgba(255, 255, 255, 0.6); /* Light reflection */
+    border-radius: 50%;
+}
+
+.icon-book {
+    font-size: 60px;
+    color: #4169e1; /* Icon color */
+}
+
+.bubble-label {
+    margin-top: 10px;
+    font-size: 18px;
+    color: grey;
+    padding: 5px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-weight: bold;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+}
+
+.bubble.active {
+    background-color: #ffd700 !important; /* Yellow when clicked */
+}
+
+.bubble-label.active {
+    background-color: grey; /* Grey background */
+    color: white; /* White text */
+    border-radius: 5px;
+}
+
+.bubble img {
+    width: 50px;
+    height: 50px;
+}
+
+/* Flexbox layout with adjustable gap */
+.d-flex {
+    gap: 10%; /* Adjust the space between bubbles */
+    justify-content: center; /* Center the bubbles horizontally */
+}
+
+/* Media queries for smaller screens */
+@media (max-width: 768px) {
+    .bubble {
+        width: 120px; /* Decrease size of bubbles for smaller screens */
+        height: 120px;
+    }
+    .library-title {
+        font-size: 36px; /* Make the title smaller on smaller screens */
+    }
+}
+
+@media (max-width: 576px) {
+    .bubble {
+        width: 100px; /* Further reduce size for very small screens */
+        height: 100px;
+    }
+    .library-title {
+        font-size: 28px; /* Further reduce the title size */
+    }
+    .d-flex {
+        gap: 20px; /* Reduce gap for smaller screens */
+    }
+}
+</style>
+<body>
+    <div class="container mt-2">
+        <!-- Header -->
+        <a href="{% url 'choose_profile' %}" class="back-button">
+            <i class="fa fa-arrow-left"></i>
+        </a>
+        <div class="text-center">
+            <h1 class="library-title">Library</h1>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="d-flex my-4">
+            <!-- Create bubbles with onclick events that call the filterContent function with a category parameter -->
+            <div class="bubble-container">
+                <div class="bubble active" onclick="toggleActive(this, 'book')"> <!-- Set default active class -->
+                    <img src="{% static 'image/book.png' %}" alt="Books">
+                </div>
+                <div class="bubble-label active">Books</div> <!-- Set default active class -->
+            </div>
+
+            <div class="bubble-container">
+                <div class="bubble" onclick="toggleActive(this, 'video')">
+                    <img src="{% static 'image/video.png' %}" alt="Videos">
+                </div>
+                <div class="bubble-label">Videos</div>
+            </div>
+
+            <div class="bubble-container">
+                <div class="bubble" onclick="toggleActive(this, 'game')">
+                    <img src="{% static 'image/game.png' %}" alt="Games">
+                </div>
+                <div class="bubble-label">Games</div>
+            </div>
+
+            <div class="bubble-container">
+                <div class="bubble" onclick="toggleActive(this, 'quiz')">
+                    <img src="{% static 'image/quiz.png' %}" alt="Quizzes">
+                </div>
+                <div class="bubble-label">Quizzes</div>
+            </div>
+
+            <div class="bubble-container">
+                <div class="bubble" onclick="toggleActive(this, 'achievement')">
+                    <img src="{% static 'image/achievement.png' %}" alt="Achievements">
+                </div>
+                <div class="bubble-label">Achievements</div>
+            </div>
+        </div>
+
+        <!-- Video and Image Cards Section -->
+        <div class="cardContainer" id="cardContainer">
+            <!-- Cards will be dynamically inserted here by JavaScript -->
+        </div>
+    </div>
+
+    <!-- JavaScript to handle filtering and display -->
+    <script>
+        // Function to toggle active class and filter content
+        function toggleActive(element, category) {
+            // Remove the active class from all bubbles and labels
+            var bubbles = document.querySelectorAll('.bubble');
+            bubbles.forEach(function(bubble) {
+                bubble.classList.remove('active');
+                if (bubble.nextElementSibling) {
+                    bubble.nextElementSibling.classList.remove('active');
+                }
+            });
+
+            // Add the active class to the clicked bubble and its label
+            element.classList.add('active');
+            if (element.nextElementSibling) {
+                element.nextElementSibling.classList.add('active');
+            }
+
+            // Call filterContent to update the displayed content based on the selected category
+            filterContent(category);
+        }
+
+        // Function to fetch and filter content based on category
+            function filterContent(category) {
+                fetch(`/libraries/library/?category=${category}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    console.log("Response received:", response);  // Log the raw response object
+                    if (!response.ok) {
+                        console.error(`Network response was not ok: ${response.statusText}`);
+                        throw new Error(`Network response was not ok: ${response.statusText}`);
+                    }
+                    return response.json();  // Parse JSON response
+                })
+                .then(data => {
+                    console.log("Data received:", data);  // Log the parsed data
+                    const cardContainer = document.getElementById('cardContainer');
+                    cardContainer.innerHTML = '';  // Clear existing content
+
+                    if (!data.content || data.content.length === 0) {
+                        console.log("No content found for this category.");
+                        return;
+                    }
+
+                    // Loop through each content item and create cards
+                    data.content.forEach(item => {
+                        console.log("Creating card for:", item.title);
+                        console.log("File URL:", item.file_url);
+
+                        const col = document.createElement('div');
+                        col.classList.add('col-md-4', 'mb-1');
+
+                        const card = document.createElement('div');
+                        card.classList.add('card');
+
+                        // Check if file_url exists and is a string before using endsWith
+                        if (item.file_url && typeof item.file_url === 'string') {
+                            // Determine if the file URL is for a video based on the type or URL extension
+                            if (item.type === 'video' || item.file_url.endsWith('.mp4') || item.file_url.endsWith('.mov')) {
+                                console.log("Creating video element...");
+                                const video = document.createElement('video');
+                                video.setAttribute('controls', true);
+                                video.classList.add('card-img-top');
+                                video.style.width = '100%';
+                                video.style.height = '200px';
+
+                                const source = document.createElement('source');
+                                source.src = item.file_url;  // Ensure a valid file URL
+                                source.type = 'video/mp4';
+                                console.log("Video Source URL:", source.src);
+
+                                video.appendChild(source);
+                                card.appendChild(video);
+                            } else if (item.type === 'image' || /\.(jpeg|jpg|gif|png)$/i.test(item.file_url)) {
+                                // Create an image element if the file is an image
+                                console.log("Creating image element...");
+                                const img = document.createElement('img');
+                                img.src = item.file_url || 'https://via.placeholder.com/350x200';
+                                img.classList.add('card-img-top');
+                                img.alt = item.title;
+                                console.log("Image Source URL:", img.src);
+
+                                card.appendChild(img);
+                            } else {
+                                console.warn("Unsupported file type for URL:", item.file_url);
+                            }
+                        } else {
+                            console.warn("Invalid or missing file URL for item:", item);
+                        }
+
+                        const cardBody = document.createElement('div');
+                        cardBody.classList.add('card-body');
+
+                        const cardTitle = document.createElement('h5');
+                        cardTitle.classList.add('card-title');
+                        cardTitle.innerText = item.title || 'No Title Available';
+
+                        cardBody.appendChild(cardTitle);
+                        card.appendChild(cardBody);
+                        col.appendChild(card);
+                        cardContainer.appendChild(col);
+                    });
+                })
+                .catch(error => {
+                    console.error("Error fetching data:", error);  // Log any errors encountered
+                });
+            }
+
+
+            window.onload = function() {
+                const defaultBubble = document.querySelector('.bubble.active');
+                if (defaultBubble) {
+                    console.log("Setting default active category to 'book'");
+                    toggleActive(defaultBubble, 'book');
+                }
+            };
+
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

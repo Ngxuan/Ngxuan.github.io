@@ -9,6 +9,7 @@ from .forms import LoginForm
 from .forms import ChildAccountForm
 from .models import Child
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, get_object_or_404
 
 
 def signup_view(request):
@@ -77,3 +78,8 @@ def choose_profile_view(request):
     # Get all children associated with the logged-in parent
     children = Child.objects.filter(parent=request.user)
     return render(request, 'childAccount.html', {'children': children})
+
+
+def child_home(request, childID):
+    child = get_object_or_404(Child, childID=childID)
+    return render(request, 'childHome.html', {'child': child})
