@@ -1,5 +1,5 @@
 from supabase import create_client, Client
-import re  # Import the regular expressions module for sanitizing file names
+import re
 
 # Define your Supabase URL and Key
 SUPABASE_URL = 'https://bngznejumgjszdsmhmkk.supabase.co'
@@ -18,7 +18,7 @@ def sanitize_file_name(file_name):
     return sanitized_name
 
 
-def upload_file_to_supabase(bucket_name, file_content, file_name):
+def upload_file_to_supabase(bucket_name, file_content, file_name, category):
     """
     Uploads a file to the specified Supabase bucket and returns the public URL if successful.
     """
@@ -26,13 +26,16 @@ def upload_file_to_supabase(bucket_name, file_content, file_name):
         # Sanitize the file name to ensure compatibility
         sanitized_file_name = sanitize_file_name(file_name)
 
-        # Ensure the file path is within the 'edu_material' folder of the 'fyp' bucket
-        file_path = f"edu_material/{sanitized_file_name}"  # This will place the file in the 'edu_material' folder
+        # Ensure the file path is within the correct folder of the bucket
+        file_path = f"{category}/{sanitized_file_name}"  # e.g., 'book/The_Lost_Bee.pdf'
 
-        # Upload the file to the specified bucket and folder
-        response = supabase.storage.from_(bucket_name).upload(file_path, file_content)
+        # Determine the content type based on the file extension
+        content_type = 'application/pdf' if file_name.endswith('.pdf') else 'application/octet-stream'
 
-        # Check if the response contains an error (for Supabase Python client, it should return a dictionary)
+        # Upload the file to the specified bucket and folder with the correct content type
+        response = supabase.storage.from_(bucket_name).upload(file_path, file_content, {'content-type': content_type})
+
+        # Check if the response contains an error
         if isinstance(response, dict) and response.get('error'):
             print(f"Error uploading file: {response['error']['message']}")
             return None
@@ -45,3 +48,4 @@ def upload_file_to_supabase(bucket_name, file_content, file_name):
     except Exception as e:
         print(f"An error occurred during upload: {e}")
         return None
+

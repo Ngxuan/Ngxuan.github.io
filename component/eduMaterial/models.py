@@ -13,7 +13,8 @@ class EducationalMaterial(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
     type = models.CharField(max_length=10, choices=MATERIAL_TYPE_CHOICES)  # Book or Video
-    file_url = models.URLField(blank=True, null=True)  # URL of the uploaded file
+    file_url = models.URLField(blank=True, null=True)  # URL of the uploaded file (PDF for books or video URL)
+    thumbnail_url = models.URLField(blank=True, null=True)  # URL of the thumbnail image for books
 
     def __str__(self):
         return self.title

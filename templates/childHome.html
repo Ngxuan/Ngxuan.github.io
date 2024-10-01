@@ -13,8 +13,13 @@
   body {
     font-family: 'Arial', sans-serif;
     position: relative;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow-x: hidden;
 }
 
+/* Page Title Styling */
 .library-title {
     font-size: 48px;
     color: #ffd700;
@@ -37,19 +42,26 @@
     color: #ffd700; /* Change color on hover */
 }
 
+/* Card Styles */
 .card {
     width: 360px; /* Adjust the width */
-    height: 260px; /* Adjust the height */
+    height: auto; /* Adjust the height */
     border: none;
     transition: transform 0.2s ease;
-    margin: 20px;
+    margin: 0 20px;
+}
+.card img {
+    width: 100%; /* Set the width to match the card */
+    height: 200px; /* Set a fixed height */
+    object-fit: cover; /* Ensure the image covers the entire area */
 }
 
 .cardContainer {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
+    justify-content: flex-start; /* Align cards to the left */
+    align-items: flex-start; /* Align cards to the top */
+
 }
 
 .card:hover {
@@ -62,6 +74,7 @@
     color: #333;
 }
 
+/* Bubble Navigation Styles */
 .bubble-container {
     text-align: center;
 }
@@ -91,11 +104,6 @@
     border-radius: 50%;
 }
 
-.icon-book {
-    font-size: 60px;
-    color: #4169e1; /* Icon color */
-}
-
 .bubble-label {
     margin-top: 10px;
     font-size: 18px;
@@ -104,8 +112,6 @@
     transition: background-color 0.3s ease, color 0.3s ease;
     font-weight: bold;
     text-align: center;
-    justify-content: center;
-    align-items: center;
 }
 
 .bubble.active {
@@ -128,6 +134,61 @@
     gap: 10%; /* Adjust the space between bubbles */
     justify-content: center; /* Center the bubbles horizontally */
 }
+
+/* Arrow Button Styles */
+.nav-button {
+    position: fixed;
+    top: 50%;
+    background: #17a2b8;
+    border: none;
+    border-radius: 50%;
+    padding: 15px;
+    cursor: pointer;
+    z-index: 1000;
+    transition: background 0.3s, transform 0.3s;
+}
+
+.nav-button img {
+    width: 40px;
+    height: 40px;
+}
+
+#prevPageButton {
+    left: 20px; /* Fixed on the left side */
+}
+
+#nextPageButton {
+    right: 20px; /* Fixed on the right side */
+}
+
+.nav-button:hover {
+    background: #138496;
+    transform: scale(1.1);
+}
+
+        .home-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #17a2b8;
+            border: none;
+            border-radius: 50%;
+            padding: 10px;
+            cursor: pointer;
+            z-index: 1000;
+            transition: background 0.3s, transform 0.3s;
+        }
+
+        .home-button:hover {
+            background: #138496;
+            transform: scale(1.1);
+        }
+
+        .home-button img {
+            width: 30px;
+            height: 30px;
+        }
+
 
 /* Media queries for smaller screens */
 @media (max-width: 768px) {
@@ -156,8 +217,11 @@
 <body>
     <div class="container mt-2">
         <!-- Header -->
-        <a href="{% url 'choose_profile' %}" class="back-button">
-            <i class="fa fa-arrow-left"></i>
+
+         <a href="{% url 'choose_profile' %}" class="home-button">
+            <button style="background: transparent; border: none;">
+                <img src="https://img.icons8.com/material-rounded/24/ffffff/home.png" alt="Home">
+            </button>
         </a>
         <div class="text-center">
             <h1 class="library-title">Library</h1>
@@ -181,17 +245,17 @@
             </div>
 
             <div class="bubble-container">
-                <div class="bubble" onclick="toggleActive(this, 'game')">
-                    <img src="{% static 'image/game.png' %}" alt="Games">
-                </div>
-                <div class="bubble-label">Games</div>
-            </div>
-
-            <div class="bubble-container">
                 <div class="bubble" onclick="toggleActive(this, 'quiz')">
                     <img src="{% static 'image/quiz.png' %}" alt="Quizzes">
                 </div>
                 <div class="bubble-label">Quizzes</div>
+            </div>
+
+            <div class="bubble-container">
+                <div class="bubble" onclick="toggleActive(this, 'game')">
+                    <img src="{% static 'image/game.png' %}" alt="Games">
+                </div>
+                <div class="bubble-label">Games</div>
             </div>
 
             <div class="bubble-container">
@@ -203,133 +267,271 @@
         </div>
 
         <!-- Video and Image Cards Section -->
-        <div class="cardContainer" id="cardContainer">
-            <!-- Cards will be dynamically inserted here by JavaScript -->
-        </div>
+        <div class="cardContainer" id="cardContainer" data-child-id="{{ child.childID }}"></div>
     </div>
 
-    <!-- JavaScript to handle filtering and display -->
+    <!-- Left and Right Arrow Buttons for Pagination -->
+    <button id="prevPageButton" class="nav-button">
+        <img src="https://img.icons8.com/material-rounded/48/ffffff/left.png" alt="Previous">
+    </button>
+    <button id="nextPageButton" class="nav-button">
+        <img src="https://img.icons8.com/material-rounded/48/ffffff/right.png" alt="Next">
+    </button>
+
     <script>
-        // Function to toggle active class and filter content
-        function toggleActive(element, category) {
-            // Remove the active class from all bubbles and labels
-            var bubbles = document.querySelectorAll('.bubble');
-            bubbles.forEach(function(bubble) {
-                bubble.classList.remove('active');
-                if (bubble.nextElementSibling) {
-                    bubble.nextElementSibling.classList.remove('active');
+// Function to toggle active class and filter content
+function toggleActive(element, category) {
+    var bubbles = document.querySelectorAll('.bubble');
+    bubbles.forEach(function(bubble) {
+        bubble.classList.remove('active');
+        if (bubble.nextElementSibling) {
+            bubble.nextElementSibling.classList.remove('active');
+        }
+    });
+    element.classList.add('active');
+    if (element.nextElementSibling) {
+        element.nextElementSibling.classList.add('active');
+    }
+    currentPage = 1;  // Reset to first page when a new category is selected
+    filterContent(category);
+}
+
+// Global variables for pagination
+let currentPage = 1;  // Track current page
+const itemsPerPage = 6;  // Number of items to show per page
+
+// Function to fetch and filter content based on category and paginate
+function filterContent(category) {
+    fetch(`/libraries/library/?category=${category}`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const cardContainer = document.getElementById('cardContainer');
+        cardContainer.innerHTML = '';  // Clear the current content
+
+        // Retrieve childID from the data attribute of cardContainer
+        const childID = cardContainer.getAttribute('data-child-id');
+
+        if (!data.content || data.content.length === 0) {
+            console.log("No content found for this category.");
+            return;
+        }
+
+        // Calculate total pages
+        const totalItems = data.content.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+        // Ensure the current page is within bounds
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+        } else if (currentPage < 1) {
+            currentPage = 1;
+        }
+
+        // Paginate content based on the current page
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const paginatedContent = data.content.slice(startIndex, endIndex);
+
+        // Create cards for the paginated content
+        paginatedContent.forEach(item => {
+            const col = document.createElement('div');
+            col.classList.add('col-md-4', 'mb-1');
+
+            const card = document.createElement('div');
+            card.classList.add('card');
+
+            // Create a clickable link for the thumbnail
+            const link = document.createElement('a');
+            link.href = '#';
+            link.style.cursor = 'pointer';
+
+            // Attach event listener directly to the element
+            link.addEventListener('click', () => {
+                if (category === 'book') {
+                    openBookViewer(item.file_url, childID, item.eduMaterialID);
+                } else if (category === 'video') {
+                    playVideoInFullScreen(item.file_url);
+                } else if (category === 'quiz') {
+                    openQuizPage(childID, item.quizID);  // Open the quiz page
                 }
             });
 
-            // Add the active class to the clicked bubble and its label
-            element.classList.add('active');
-            if (element.nextElementSibling) {
-                element.nextElementSibling.classList.add('active');
-            }
+            // Determine the thumbnail URL or fallback
+            const thumbnailUrl = item.thumbnail_url || 'https://via.placeholder.com/350x200';
+            const img = document.createElement('img');
+            img.src = thumbnailUrl;
+            img.classList.add('card-img-top');
+            img.alt = item.title;
 
-            // Call filterContent to update the displayed content based on the selected category
-            filterContent(category);
+            link.appendChild(img);
+            card.appendChild(link);
+
+            const cardBody = document.createElement('div');
+            cardBody.classList.add('card-body');
+
+            const cardTitle = document.createElement('h5');
+            cardTitle.classList.add('card-title');
+            cardTitle.innerText = item.title || 'No Title Available';
+
+            cardBody.appendChild(cardTitle);
+            card.appendChild(cardBody);
+            col.appendChild(card);
+            cardContainer.appendChild(col);
+        });
+
+        // Show pagination controls and enable/disable buttons as needed
+        updatePaginationControls(totalPages);
+    })
+    .catch(error => {
+        console.error("Error fetching data:", error);
+    });
+}
+
+// Show and update pagination controls based on the total pages
+function updatePaginationControls(totalPages) {
+    const prevButton = document.getElementById('prevPageButton');
+    const nextButton = document.getElementById('nextPageButton');
+
+    // Show or hide buttons based on total pages
+    if (totalPages <= 1) {
+        // If only one page or no content, hide both buttons
+        prevButton.style.display = 'none';
+        nextButton.style.display = 'none';
+    } else {
+        // Show buttons if more than one page
+        prevButton.style.display = 'block';
+        nextButton.style.display = 'block';
+
+        // Enable/disable buttons based on current page
+        prevButton.disabled = currentPage === 1;
+        nextButton.disabled = currentPage === totalPages;
+
+        // If on the first page, hide the previous button
+        if (currentPage === 1) {
+            prevButton.style.display = 'none';
+        } else {
+            prevButton.style.display = 'block';
         }
 
-        // Function to fetch and filter content based on category
-            function filterContent(category) {
-                fetch(`/libraries/library/?category=${category}`, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => {
-                    console.log("Response received:", response);  // Log the raw response object
-                    if (!response.ok) {
-                        console.error(`Network response was not ok: ${response.statusText}`);
-                        throw new Error(`Network response was not ok: ${response.statusText}`);
-                    }
-                    return response.json();  // Parse JSON response
-                })
-                .then(data => {
-                    console.log("Data received:", data);  // Log the parsed data
-                    const cardContainer = document.getElementById('cardContainer');
-                    cardContainer.innerHTML = '';  // Clear existing content
+        // If on the last page, hide the next button
+        if (currentPage === totalPages) {
+            nextButton.style.display = 'none';
+        } else {
+            nextButton.style.display = 'block';
+        }
+    }
+}
 
-                    if (!data.content || data.content.length === 0) {
-                        console.log("No content found for this category.");
-                        return;
-                    }
+// Function to handle Previous button click
+function handlePreviousPageClick() {
+    if (currentPage > 1) {
+        currentPage--;
+        filterContent(document.querySelector('.bubble.active').getAttribute('data-category'));
+    }
+}
 
-                    // Loop through each content item and create cards
-                    data.content.forEach(item => {
-                        console.log("Creating card for:", item.title);
-                        console.log("File URL:", item.file_url);
+// Function to handle Next button click
+function handleNextPageClick() {
+    const category = document.querySelector('.bubble.active').getAttribute('data-category');
+    fetch(`/libraries/library/?category=${category}`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const totalItems = data.content.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-                        const col = document.createElement('div');
-                        col.classList.add('col-md-4', 'mb-1');
+        if (currentPage < totalPages) {
+            currentPage++;
+            filterContent(category);
+        }
+    })
+    .catch(error => {
+        console.error("Error handling Next button click:", error);
+    });
+}
 
-                        const card = document.createElement('div');
-                        card.classList.add('card');
+// Function to open the book viewer in a new page
+function openBookViewer(bookUrl, childID, eduMaterialID) {
+    window.location.href = `/eduMaterial/book/${childID}/${eduMaterialID}/?bookUrl=${encodeURIComponent(bookUrl)}`;
+}
+function openQuizPage(childID, quizID) {
+    window.location.href = `/quizzes/quiz/${childID}/${quizID}/`;
+}
+// Function to play video in full screen (for videos)
+function playVideoInFullScreen(videoUrl) {
+    const videoElement = document.createElement('video');
+    videoElement.src = videoUrl;
+    videoElement.controls = true;
+    videoElement.style.display = 'none';
 
-                        // Check if file_url exists and is a string before using endsWith
-                        if (item.file_url && typeof item.file_url === 'string') {
-                            // Determine if the file URL is for a video based on the type or URL extension
-                            if (item.type === 'video' || item.file_url.endsWith('.mp4') || item.file_url.endsWith('.mov')) {
-                                console.log("Creating video element...");
-                                const video = document.createElement('video');
-                                video.setAttribute('controls', true);
-                                video.classList.add('card-img-top');
-                                video.style.width = '100%';
-                                video.style.height = '200px';
+    document.body.appendChild(videoElement);
+    videoElement.addEventListener('loadedmetadata', () => {
+        videoElement.style.display = 'block';
+        videoElement.play();
+        if (videoElement.requestFullscreen) {
+            videoElement.requestFullscreen();
+        } else if (videoElement.mozRequestFullScreen) {
+            videoElement.mozRequestFullScreen();
+        } else if (videoElement.webkitRequestFullscreen) {
+            videoElement.webkitRequestFullscreen();
+        } else if (videoElement.msRequestFullscreen) {
+            videoElement.msRequestFullscreen();
+        }
+    });
 
-                                const source = document.createElement('source');
-                                source.src = item.file_url;  // Ensure a valid file URL
-                                source.type = 'video/mp4';
-                                console.log("Video Source URL:", source.src);
+    // Add event listener to remove the video element when it ends
+    videoElement.addEventListener('ended', () => {
+        removeVideoElement(videoElement);
+    });
 
-                                video.appendChild(source);
-                                card.appendChild(video);
-                            } else if (item.type === 'image' || /\.(jpeg|jpg|gif|png)$/i.test(item.file_url)) {
-                                // Create an image element if the file is an image
-                                console.log("Creating image element...");
-                                const img = document.createElement('img');
-                                img.src = item.file_url || 'https://via.placeholder.com/350x200';
-                                img.classList.add('card-img-top');
-                                img.alt = item.title;
-                                console.log("Image Source URL:", img.src);
+    // Add event listener to remove the video element when exiting full screen mode
+    document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement) {
+            removeVideoElement(videoElement);
+        }
+    });
+    document.addEventListener('webkitfullscreenchange', () => {
+        if (!document.webkitFullscreenElement) {
+            removeVideoElement(videoElement);
+        }
+    });
+    document.addEventListener('mozfullscreenchange', () => {
+        if (!document.mozFullScreenElement) {
+            removeVideoElement(videoElement);
+        }
+    });
+    document.addEventListener('MSFullscreenChange', () => {
+        if (!document.msFullscreenElement) {
+            removeVideoElement(videoElement);
+        }
+    });
+}
 
-                                card.appendChild(img);
-                            } else {
-                                console.warn("Unsupported file type for URL:", item.file_url);
-                            }
-                        } else {
-                            console.warn("Invalid or missing file URL for item:", item);
-                        }
+// Function to remove the video element from the DOM
+function removeVideoElement(videoElement) {
+    if (document.body.contains(videoElement)) {
+        document.body.removeChild(videoElement);
+    }
+}
 
-                        const cardBody = document.createElement('div');
-                        cardBody.classList.add('card-body');
+// Set default active category and pagination on page load
+window.onload = function() {
+    const defaultBubble = document.querySelector('.bubble.active');
+    if (defaultBubble) {
+        currentPage = 1;  // Reset to page 1 on new category selection
+        toggleActive(defaultBubble, 'book');
+    }
 
-                        const cardTitle = document.createElement('h5');
-                        cardTitle.classList.add('card-title');
-                        cardTitle.innerText = item.title || 'No Title Available';
-
-                        cardBody.appendChild(cardTitle);
-                        card.appendChild(cardBody);
-                        col.appendChild(card);
-                        cardContainer.appendChild(col);
-                    });
-                })
-                .catch(error => {
-                    console.error("Error fetching data:", error);  // Log any errors encountered
-                });
-            }
-
-
-            window.onload = function() {
-                const defaultBubble = document.querySelector('.bubble.active');
-                if (defaultBubble) {
-                    console.log("Setting default active category to 'book'");
-                    toggleActive(defaultBubble, 'book');
-                }
-            };
+    // Attach click event listeners to pagination buttons
+    document.getElementById('prevPageButton').addEventListener('click', handlePreviousPageClick);
+    document.getElementById('nextPageButton').addEventListener('click', handleNextPageClick);
+};
 
     </script>
+
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>

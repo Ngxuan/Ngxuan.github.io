@@ -21,5 +21,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('user/', include('component.user.urls')),  # Include the user app's URLs
     path('libraries/', include('component.library.urls')),
+    path('eduMaterial/', include('component.eduMaterial.urls')),
+    path('quizzes/', include('component.quiz.urls')),
 
 ]
