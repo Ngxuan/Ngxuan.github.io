@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'component.eduMaterial.apps.EduMaterialConfig',
     'component.library',
     'component.quiz',
+    'component.game',
 ]
 
 MIDDLEWARE = [

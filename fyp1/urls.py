@@ -23,5 +23,6 @@ urlpatterns = [
     path('libraries/', include('component.library.urls')),
     path('eduMaterial/', include('component.eduMaterial.urls')),
     path('quizzes/', include('component.quiz.urls')),
+    path('games/', include('component.game.urls')),
 
 ]

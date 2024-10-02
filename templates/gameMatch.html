@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ game.title }} - Game UI</title>
+    {% load static %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        /* Body and Background Styling */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-image: url("{% static 'image/gamebackground.png' %}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;  /* Align content vertically */
+        }
+
+        .question-section {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: row;  /* Ensure horizontal alignment */
+            gap: 35%;  /* Spacing between options */
+            margin-top: 20px;  /* Space between sound button and options */
+            visibility: visible;  /* Ensure visibility */
+            position: relative;
+        }
+
+        .game-item {
+            width: 150px;
+            height: 150px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            transition: transform 0.2s;
+            flex-shrink: 0;  /* Prevent items from shrinking */
+        }
+
+        .game-item:hover {
+            transform: scale(1.1);
+        }
+
+        .game-item img {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+
+        .home-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #17a2b8;
+            border: none;
+            border-radius: 50%;
+            padding: 10px;
+            cursor: pointer;
+            z-index: 1000;  /* Ensure the home button stays above the modal */
+            transition: background 0.3s, transform 0.3s;
+        }
+
+        .home-button:hover {
+            background: #138496;
+            transform: scale(1.1);
+        }
+
+        .home-button img {
+            width: 30px;
+            height: 30px;
+        }
+
+        .sound-button {
+            background: #17a2b8;
+            border: none;
+            border-radius: 50%;
+            padding: 15px;
+            cursor: pointer;
+            z-index: 1000;  /* Ensure the sound button stays above the modal */
+            transition: background 0.3s, transform 0.3s;
+            color: white;
+            font-size: 40px;
+            position: absolute;
+            top: 150px;
+        }
+
+        .sound-button:hover {
+            background: #138496;
+            transform: scale(1.1);
+        }
+
+        /* Hide the question sections but maintain layout properties */
+        .question-section.hidden {
+            visibility: hidden;
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+        }
+
+        /* Show the active question section */
+        .question-section.active {
+            visibility: visible;
+            position: relative;
+        }
+
+        /* Modal Styling */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 999; /* Ensure the modal is below the home and sound buttons */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5); /* Black background with opacity */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 10px;
+            width: 60%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .modal-content h2 {
+            color: #28a745; /* Success green */
+            margin-bottom: 20px;
+            font-size: 40px;
+        }
+
+        .modal-content p {
+            font-size: 30px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Game Container -->
+    <div class="game-container">
+        <!-- Home Button -->
+        <a href="{% url 'child_home' childID=childID %}" class="home-button" id="homeButton">
+            <button style="background: transparent; border: none;">
+                <img src="https://img.icons8.com/material-rounded/24/ffffff/home.png" alt="Home">
+            </button>
+        </a>
+
+        <!-- Sound Button (Now positioned above the game options) -->
+        <div class="sound-button" onclick="playSound()">
+            <i class="fas fa-volume-up"></i>
+        </div>
+
+        <!-- Dynamic Game Items -->
+        <div id="questions-container">
+            {% for question in questions_with_options %}
+                <div class="question-section {% if not forloop.first %}hidden{% else %}active{% endif %}" id="question-{{ forloop.counter0 }}">
+                    {% for option in question.options %}
+                        <div class="game-item" data-option-id="{{ option.optionID }}" onclick="checkAnswer('{{ option.optionID }}', '{{ question.correct_option_id }}', {{ forloop.parentloop.counter0 }})">
+                            {% if option.image_url %}
+                                <img src="{{ option.image_url }}" alt="{{ option.text }}">
+                            {% else %}
+                                <span>{{ option.text }}</span>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Completion Modal -->
+        <div id="completionModal" class="modal">
+            <div class="modal-content">
+                <h2>Congratulations!</h2>
+                <p>You have completed the game successfully.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include Font Awesome for icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+
+    <script>
+        let currentQuestionIndex = 0;
+
+        // Function to play sound for the question
+        function playSound() {
+            const audio = new Audio('{{ game.thumbnail_url }}');  // Replace with the actual path to your audio file
+            audio.play();
+        }
+
+        // Function to check the answer and switch to the next question
+        function checkAnswer(selectedOptionID, correctOptionID, questionIndex) {
+            console.log("Selected Option ID:", selectedOptionID);  // Debugging
+            console.log("Correct Option ID:", correctOptionID);    // Debugging
+
+            // Compare the selected option ID with the correct option ID
+            if (selectedOptionID === correctOptionID) {
+                alert('Correct! You selected the right answer.');
+
+                // Hide the current question
+                document.getElementById(`question-${questionIndex}`).classList.remove('active');
+                document.getElementById(`question-${questionIndex}`).classList.add('hidden');
+
+                // Show the next question
+                const nextQuestion = document.getElementById(`question-${questionIndex + 1}`);
+                if (nextQuestion) {
+                    nextQuestion.classList.remove('hidden');
+                    nextQuestion.classList.add('active');
+                    currentQuestionIndex++;
+                } else {
+                    showCompletionModal(); // Show the completion modal when game ends
+                }
+            } else {
+                alert('Try again!');
+            }
+        }
+
+        // Function to show the completion modal
+        function showCompletionModal() {
+            const modal = document.getElementById('completionModal');
+            modal.style.display = 'flex';  // Show the modal
+
+             // Hide the sound button
+        const soundButton = document.querySelector('.sound-button');
+        soundButton.style.display = 'none';
+        }
+    </script>
+</body>
+</html>

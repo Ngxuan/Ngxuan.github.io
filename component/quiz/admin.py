@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib import admin
-from .models import QuizQuestion, QuizQuestionOption, Quiz, ChildQuiz
+from .models import QuizQuestion, QuizQuestionOption, Quiz, ChildQuiz,QuizType
 from component.supabase_client import upload_file_to_supabase  # Import the Supabase upload function
 
 # Define a constant for the Supabase bucket name
@@ -64,12 +64,18 @@ class QuizAdminForm(forms.ModelForm):
 # Customizing the display for Quiz with the custom form
 class QuizAdmin(admin.ModelAdmin):
     form = QuizAdminForm  # Use the custom form for Quiz
-    list_display = ('quizID', 'title', 'thumbnail_url', 'status')  # Display quiz title and other fields
-    list_filter = ('status',)  # Filter by status (True/False)
+    list_display = ('quizID', 'title', 'thumbnail_url', 'status', 'type')  # Display quiz title, type, and other fields
+    list_filter = ('status', 'type')  # Filter by status and type
     search_fields = ('quizID', 'title')  # Allow searching by quiz ID or title
-    fields = ('title', 'thumbnail_url', 'status', 'questions', 'upload_logo')  # Include title and fields for display
-    readonly_fields = ('thumbnail_url',)  # Make quizLogo readonly since it's populated via upload
+    fields = ('title', 'status', 'type', 'questions', 'upload_logo')  # Include type and other fields for display
+    readonly_fields = ('thumbnail_url',)  # Make thumbnail_url readonly since it's populated via upload
     exclude = ('quizID',)  # Exclude quizID from the form since it's non-editable
+
+
+# Admin class for managing QuizType
+class QuizTypeAdmin(admin.ModelAdmin):
+    list_display = ('typeID', 'type_name')  # Display ID and type name
+    search_fields = ('type_name',)  # Allow searching by type na
 
 
 class ChildQuizAdmin(admin.ModelAdmin):
@@ -81,4 +87,5 @@ class ChildQuizAdmin(admin.ModelAdmin):
 # Register each model with their corresponding custom admin classes
 admin.site.register(QuizQuestion, QuizQuestionAdmin)
 admin.site.register(Quiz, QuizAdmin)
+admin.site.register(QuizType, QuizTypeAdmin)  # Register QuizType with its admin class
 admin.site.register(ChildQuiz, ChildQuizAdmin)

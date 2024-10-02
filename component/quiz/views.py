@@ -2,76 +2,90 @@ from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from .models import Quiz, ChildQuiz
 import json
-from django.db import DataError
+from django.utils import timezone
+import uuid
+from ..user.models import Child
 
 
 def quiz_page(request, childID, quizID):
-    """Display the quiz page based on the selected quiz."""
-    try:
-        # Retrieve the quiz using the quizID with efficient related object fetching
-        quiz = Quiz.objects.prefetch_related('questions__options').get(quizID=quizID)
+    """
+    Display the quiz page based on the selected quiz.
+    Do not create a ChildQuiz instance here. It will be created when the quiz is completed.
+    """
+    # Retrieve the quiz using the quizID
+    quiz = get_object_or_404(Quiz, quizID=quizID)
 
-        # Prepare questions with correct option ID
-        questions_with_correct_option = []
-        for question in quiz.questions.all():
-            correct_option = question.options.filter(is_correct=True).first()  # Get the correct option for each question
-            questions_with_correct_option.append({
-                'question': question,
-                'correct_option_id': correct_option.optionID if correct_option else None
-            })
+    # Prepare questions with correct option ID
+    questions_with_correct_option = [
+        {'question': question, 'correct_option_id': question.options.filter(is_correct=True).first().optionID}
+        for question in quiz.questions.all()
+    ]
 
-        # Pass the modified questions list to the template
-        return render(request, 'quiz.html', {
-            'quiz': quiz,
-            'childID': childID,
-            'questions_with_correct_option': questions_with_correct_option
-        })
-    except Quiz.DoesNotExist:
-        return JsonResponse({'error': 'Quiz not found'}, status=404)
-    except Exception as e:
-        return JsonResponse({'error': f'An error occurred: {str(e)}'}, status=500)
+    # Render the quiz page with the quiz details
+    return render(request, 'quiz.html', {
+        'quiz': quiz,
+        'childID': childID,
+        'questions_with_correct_option': questions_with_correct_option
+    })
 
 
 def save_quiz_result(request):
-    """Save the quiz results for a child."""
+    """
+    Save the quiz result for the given child quiz.
+    If the child quiz does not exist, create it first and then save the result.
+    """
     if request.method == 'POST':
         try:
-            # Parse the request data (assumed to be JSON)
+            # Retrieve the quiz result data from the request body
             data = json.loads(request.body)
+            print(f"Request Data: {data}")  # Debugging statement to print the incoming data
 
-            # Retrieve the necessary data from the request
-            child_quiz_id = data.get('child_quiz_id')
-            correct_answers = data.get('correct_answers')
-            total_questions = data.get('total_questions')
+            # Retrieve childID and quizID from the request data
+            child_id_str = data.get('childID')  # Retrieve childID from request body
+            quiz_id_str = data.get('quizID')  # Retrieve quizID from request body
+            score = data.get('score', 0)  # Default to 0 if not provided
+            correct_answers = data.get('correct_answers', 0)  # Default to 0 if not provided
 
-            # Validate that the necessary fields are present
-            if not child_quiz_id or correct_answers is None or total_questions is None:
-                return JsonResponse({'error': 'Invalid data provided'}, status=400)
+            if not child_id_str or not quiz_id_str:
+                return JsonResponse({'error': 'Missing child or quiz ID'}, status=400)
 
-            # Retrieve the `ChildQuiz` instance using the provided child_quiz_id
-            child_quiz = get_object_or_404(ChildQuiz, childQuizID=child_quiz_id)
+            # Convert string IDs to UUID objects
+            try:
+                child_id = uuid.UUID(child_id_str)  # Use the correct UUID conversion for childID
+                quiz_id = uuid.UUID(quiz_id_str)  # Use the correct UUID conversion for quizID
+                print(f"Converted UUIDs - Child ID: {child_id}, Quiz ID: {quiz_id}")  # Debugging statement
+            except ValueError:
+                return JsonResponse({'error': 'Invalid UUID format for childID or quizID'}, status=400)
 
-            # Calculate the score as a percentage of correct answers out of total questions
-            if total_questions > 0:
-                score = (correct_answers / total_questions) * 100
-            else:
-                score = 0  # Handle division by zero
+            # Check if the child exists using the `childID` field, not the default `id`
+            child = Child.objects.filter(childID=child_id).first()
+            if not child:
+                print(f"No child found with childID: {child_id}")  # Debugging statement
+                return JsonResponse({'error': f'No Child matches the given query: {child_id}'}, status=400)
 
-            # Validate and adjust the score if necessary
-            score = max(0, min(score, 100))  # Ensure the score is between 0 and 100
+            # Check if the quiz exists
+            quiz = Quiz.objects.filter(quizID=quiz_id).first()
+            if not quiz:
+                print(f"No quiz found with quizID: {quiz_id}")  # Debugging statement
+                return JsonResponse({'error': f'No Quiz matches the given query: {quiz_id}'}, status=400)
 
-            # Update and save the `ChildQuiz` instance
+            # Retrieve or create the ChildQuiz instance using UUIDs
+            child_quiz, created = ChildQuiz.objects.get_or_create(
+                child=child,
+                quiz=quiz,
+                defaults={'status': False, 'startDate': timezone.now()}
+            )
+
+            # Update the ChildQuiz instance with the quiz result
             child_quiz.score = score
             child_quiz.correct_answers = correct_answers
-            child_quiz.status = True  # Mark the quiz as completed
+            child_quiz.status = True
+            child_quiz.timeSpent = timezone.now() - child_quiz.startDate
             child_quiz.save()
 
-            return JsonResponse({'message': 'Quiz result saved successfully', 'score': score})
-        except ChildQuiz.DoesNotExist:
-            return JsonResponse({'error': 'Child quiz not found'}, status=404)
-        except DataError:
-            return JsonResponse({'error': 'Failed to save quiz result due to data error'}, status=500)
+            return JsonResponse({'message': 'Quiz result saved successfully'})
         except Exception as e:
-            return JsonResponse({'error': f'An unexpected error occurred: {str(e)}'}, status=500)
+            print(f"Error saving quiz result: {e}")  # Print the error for debugging
+            return JsonResponse({'error': 'Failed to save quiz result'}, status=500)
     else:
-        return JsonResponse({'error': 'Invalid request method'}, status=405)
+        return JsonResponse({'error': 'Invalid request method'}, status=400)

@@ -3,12 +3,19 @@ from django.utils import timezone
 from component.user.models import Child  # Import Child model
 import uuid
 
+
+class QuizType(models.Model):
+    typeID = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
+    type_name = models.CharField(max_length=100)  # Type name, e.g., "Multiple Choice", "True/False"
+
+    def __str__(self):
+        return self.type_name  # Display type_name as the string representation
+
+
 class QuizQuestion(models.Model):
     quizQuestionID = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
     question = models.TextField()
-    # Removing old fields for options and answers
-    # option = models.JSONField()
-    # answer = models.JSONField()
+
 
     def get_quiz_question_id(self):
         return self.quizQuestionID
@@ -30,18 +37,16 @@ class QuizQuestionOption(models.Model):
 class Quiz(models.Model):
     quizID = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
     title = models.CharField(max_length=100, null=True, blank=True)
-
-
-    thumbnail_url  = models.URLField(blank=True, null=True)
+    thumbnail_url = models.URLField(blank=True, null=True)
     status = models.BooleanField(default=False)
     questions = models.ManyToManyField(QuizQuestion, related_name='quizzes')
+    type = models.ForeignKey(QuizType, on_delete=models.SET_NULL, null=True, blank=True, related_name='quizzes')  # Add reference to QuizType
 
     def get_quiz_id(self):
         return self.quizID
 
     def __str__(self):
         return self.title  # Use the title for display
-
 
 
 class ChildQuiz(models.Model):

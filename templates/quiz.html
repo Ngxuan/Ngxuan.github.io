@@ -6,11 +6,11 @@
     <title>Quiz Page</title>
     {% load static %}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
+     <style>
         body, html {
             height: 100%;
             margin: 0;
-            background-image: url("{% static 'image/quizbackground.png' %}"); /* Background image */
+            background-image: url("{% static 'image/quizbackground.png' %}");
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -54,80 +54,75 @@
             font-size: 40px;
             font-weight: bold;
             margin-bottom: 20px;
-            background: rgba(255, 255, 255, 0.9); /* Light white background with transparency */
+            background: rgba(255, 255, 255, 0.9);
             border-radius: 15px;
             padding: 50px;
             text-align: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow effect */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
         .quiz-options {
             margin-top: 10%;
             display: grid;
-            grid-template-columns: repeat(2, 1fr); /* Create a grid with 2 columns */
-            gap: 40px; /* Increase space between buttons */
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
         }
 
         .quiz-option {
-            font-size: 30px; /* Increase the font size */
-            padding: 70px; /* Increase the padding */
+            font-size: 30px;
+            padding: 70px;
             border: none;
             border-radius: 15px;
             cursor: pointer;
             transition: transform 0.2s;
             color: white;
-            width: 100%; /* Set the width of the buttons */
-            text-align: center; /* Center the text */
+            width: 100%;
+            text-align: center;
         }
 
         .quiz-option:hover {
-            transform: scale(1.1); /* Slightly increase size on hover */
+            transform: scale(1.1);
         }
 
-        /* Custom colors for each button */
         .btn-color-1 {
-            background-color: #FCE098; /* Yellow */
+            background-color: #FCE098;
             color: black;
             font-weight: bold;
         }
 
         .btn-color-2 {
-            background-color: #B3E5FC; /* Light Blue */
+            background-color: #B3E5FC;
             color: black;
             font-weight: bold;
         }
 
         .btn-color-3 {
-            background-color: #E2BB96; /* Light Green */
+            background-color: #E2BB96;
             color: black;
             font-weight: bold;
         }
 
         .btn-color-4 {
-            background-color: #F5CFF6; /* Pink */
+            background-color: #F5CFF6;
             color: black;
             font-weight: bold;
         }
 
-        /* Correct answer */
         .btn-correct {
-            background-color: #4CAF50; /* Green */
+            background-color: #4CAF50;
             color: white;
         }
 
-        /* Incorrect answer */
         .btn-incorrect {
-            background-color: #F44336; /* Red */
+            background-color: #F44336;
             color: white;
         }
 
-        /* Inactive state for options */
         .btn-inactive {
-            background-color: #e0e0e0; /* Grey */
+            background-color: #e0e0e0;
             color: black;
         }
 
-        /* Progress bar styling */
         .progress-bar-container {
             width: 100%;
             height: 30px;
@@ -135,172 +130,253 @@
             border-radius: 15px;
             margin: 20px 0;
             overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow effect */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
         .progress-bar {
             height: 100%;
             background-color: #4CAF50;
-            width: 0%; /* Initial width is 0 */
+            width: 0%;
             border-radius: 15px;
-            transition: width 5s linear; /* Transition width over 5 seconds */
+            transition: width 0.5s linear;
         }
 
-        /* Hide all questions by default */
+        .nav-button {
+            position: absolute;
+            top: 50%;
+            background: #17a2b8;
+            border: none;
+            border-radius: 50%;
+            padding: 15px;
+            cursor: pointer;
+            z-index: 1000;
+            transition: background 0.3s, transform 0.3s;
+        }
+
+        .nav-button:hover {
+            background: #138496;
+            transform: scale(1.1);
+        }
+
+        .nav-button img {
+            width: 40px;
+            height: 40px;
+        }
+
+        #prevPage {
+            left: 20px;
+        }
+
+        #nextPage {
+            right: 20px;
+        }
+
         .quiz-question {
             display: none;
         }
+
+       .score-box {
+            background: rgba(255, 255, 255, 0.9); /* Light white background with transparency */
+            border-radius: 15px;
+            padding: 50px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow effect */
+        }
+
+        .score-box h2 {
+            font-size: 50px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .score-score {
+            font-size: 40px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .score-comment {
+            font-size: 30px;
+            font-weight: bold;
+            color: black;
+        }
+
+        /* Additional styling for final result */
+        #quiz-end {
+            display: none; /* Hide by default until quiz ends */
+        }
     </style>
 </head>
+
 <body>
     <div class="container mt-4">
-        <!-- Home Button -->
+        <div id="quiz-info" data-child-id="{{ childID }}" data-quiz-id="{{ quiz.quizID }}"></div>
         <a href="{% url 'child_home' childID=childID %}" class="home-button" id="homeButton">
             <button style="background: transparent; border: none;">
                 <img src="https://img.icons8.com/material-rounded/24/ffffff/home.png" alt="Home">
             </button>
         </a>
-
-        <!-- Quiz Title -->
         <div class="text-center mb-4">
             <h1>{{ quiz.title }}</h1>
         </div>
 
-        <!-- Progress Bar -->
         <div class="progress-bar-container">
             <div id="progress-bar" class="progress-bar"></div>
         </div>
-
-        <!-- Quiz Content -->
- <div class="quiz-container">
+        <button id="prevPage" class="nav-button" onclick="navigateQuestion(-1)">
+            <img src="https://img.icons8.com/material-rounded/48/ffffff/left.png" alt="Previous">
+        </button>
+        <button id="nextPage" class="nav-button" onclick="navigateQuestion(1)">
+            <img src="https://img.icons8.com/material-rounded/48/ffffff/right.png" alt="Next">
+        </button>
+         <div class="quiz-container">
             <div class="quiz-box">
-                <!-- Loop through each question -->
                 {% for question_data in questions_with_correct_option %}
-                <div class="quiz-question"
-                     id="question-{{ forloop.counter }}"
-                     data-correct-option="{{ question_data.correct_option_id }}">
+                <div class="quiz-question" id="question-{{ forloop.counter }}" data-correct-option="{{ question_data.correct_option_id }}">
                     <h2>{{ question_data.question.question }}</h2>
                     <div class="quiz-options">
                         {% for option in question_data.question.options.all %}
-                        <!-- Assign a unique class to each option based on the loop counter -->
-                        <button class="quiz-option btn-color-{{ forloop.counter }}"
-                                id="option-{{ option.optionID }}"
-                                onclick="checkAnswer('{{ question_data.question.quizQuestionID }}', '{{ option.optionID }}', {{ forloop.parentloop.counter }})">
+                        <button class="quiz-option btn-color-{{ forloop.counter }}" id="option-{{ option.optionID }}" onclick="checkAnswer('{{ question_data.question.quizQuestionID }}', '{{ option.optionID }}', {{ forloop.parentloop.counter }})">
                             {{ option.text }}
                         </button>
                         {% endfor %}
                     </div>
                 </div>
                 {% endfor %}
-                <!-- Message shown when all questions are completed -->
                 <div class="quiz-question" id="quiz-end">
-                    <h2>Quiz Completed! Well done!</h2>
-                    <p id="quiz-score"></p>
+                    <div class="score-box">
+                        <h2>Quiz Completed!</h2>
+                        <p id="quiz-score" class="score-score"></p>
+                        <p id="quiz-comment" class="score-comment"></p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // JavaScript to control quiz question flow and answer validation
-        let currentQuestion = 1; // Track current question
-        let correctAnswers = 0;  // Track the number of correct answers
-        const totalQuestions = {{ questions_with_correct_option|length }}; // Total number of questions
+        let currentQuestion = 1;
+        let correctAnswers = 0;
+        let answeredQuestionsCount = 0;
+        const totalQuestions = {{ questions_with_correct_option|length }};
+        const answeredQuestions = [];
 
-        // Function to check the answer and show the next question
+        document.getElementById('question-1').style.display = 'block';
+
         function checkAnswer(questionID, selectedOptionID, current) {
-            // Get the correct option ID for the current question
             const correctOptionID = document.getElementById(`question-${current}`).dataset.correctOption;
-
-            // Get all options for the current question
             const options = document.querySelectorAll(`#question-${current} .quiz-option`);
 
-            // Loop through options and style them based on whether they are correct or incorrect
             options.forEach(option => {
                 if (option.id === `option-${correctOptionID}`) {
-                    option.classList.add('btn-correct'); // Mark the correct answer in green
+                    option.classList.add('btn-correct');
                 } else if (option.id === `option-${selectedOptionID}`) {
-                    option.classList.add('btn-incorrect'); // Mark the selected (incorrect) answer in red
+                    option.classList.add('btn-incorrect');
                 } else {
-                    option.classList.add('btn-inactive'); // Mark all other options as inactive (grey)
+                    option.classList.add('btn-inactive');
                 }
-                option.disabled = true; // Disable all buttons after selecting an answer
+                option.disabled = true;
             });
 
-            // Check if the selected answer is correct
             if (selectedOptionID === correctOptionID) {
-                correctAnswers++; // Increment the correct answer count
+                correctAnswers++;
             }
 
-            // Start the progress bar animation
-            startProgressBar();
-
-            // Wait for 5 seconds before showing the next question
-            setTimeout(() => showNextQuestion(current), 5000);
-        }
-
-        // Function to show the next question
-        function showNextQuestion(current) {
-            // Hide the current question
-            document.getElementById(`question-${current}`).style.display = 'none';
-
-            // Reset the progress bar
-            resetProgressBar();
-
-            // Determine the next question to show
-            const nextQuestion = current + 1;
-            if (nextQuestion <= totalQuestions) {
-                // Show the next question
-                document.getElementById(`question-${nextQuestion}`).style.display = 'block';
-            } else {
-                // All questions are completed, show end message
-                document.getElementById('quiz-end').style.display = 'block';
-
-                // Calculate and display the score
-                const score = Math.round((correctAnswers / totalQuestions) * 100);
-                document.getElementById('quiz-score').innerText = `You got ${correctAnswers} out of ${totalQuestions} correct. Your score is ${score}%.`;
-
-                // Save the quiz result using AJAX
-                saveQuizResult(score, correctAnswers);
+            if (!answeredQuestions[current]) {
+                answeredQuestionsCount++;
+                answeredQuestions[current] = true;
             }
+
+            updateProgressBar();
+            document.getElementById('nextPage').style.display = 'block';
         }
 
-        // Function to save the quiz result using AJAX
+        function navigateQuestion(direction) {
+            document.getElementById(`question-${currentQuestion}`).style.display = 'none';
+            currentQuestion += direction;
+
+            if (currentQuestion < 1) currentQuestion = 1;
+            if (currentQuestion > totalQuestions) {
+                // If the next button is pressed on the last question, show the result
+                showFinalResult();
+                return;
+            }
+
+            document.getElementById(`question-${currentQuestion}`).style.display = 'block';
+
+            document.getElementById('prevPage').style.display = currentQuestion === 1 ? 'none' : 'block';
+            document.getElementById('nextPage').style.display = currentQuestion === totalQuestions ? 'block' : 'block';
+        }
+
+        function updateProgressBar() {
+            const progress = (answeredQuestionsCount / totalQuestions) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+        }
+
         function saveQuizResult(score, correctAnswers) {
-            const childQuizID = "{{ child_quiz.childQuizID }}"; // Use childQuiz ID from context
+            const childID = "{{ childID }}";
+            const quizID = "{{ quiz.quizID }}";
 
-            fetch(`/quizzes/save_result/${childQuizID}/`, {
+            if (!childID || !quizID) {
+                console.error("Invalid childID or quizID. Cannot save the quiz result.");
+                return;
+            }
+
+            fetch(`/quizzes/save_result/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'  // Include CSRF token for security
+                    'X-CSRFToken': '{{ csrf_token }}'
                 },
-                body: JSON.stringify({ score: score, correct_answers: correctAnswers })
+                body: JSON.stringify({
+                    childID: childID,
+                    quizID: quizID,
+                    score: score,
+                    correct_answers: correctAnswers
+                })
             })
             .then(response => response.json())
             .then(data => {
-                console.log(data.message);
+                if (data.message) {
+                    console.log(data.message);
+                } else {
+                    console.error("Error: Unexpected response format", data);
+                }
             })
             .catch(error => {
                 console.error('Error saving quiz result:', error);
             });
         }
 
-        // Functions for progress bar animation (same as before)
-        function startProgressBar() {
-            const progressBar = document.getElementById('progress-bar');
-            progressBar.style.width = '100%'; // Animate to full width over 5 seconds
+        function showFinalResult() {
+            const score = Math.round((correctAnswers / totalQuestions) * 100);
+            document.getElementById('quiz-end').style.display = 'block'; // Show the result box
+         //   document.getElementById(`question-${currentQuestion}`).style.display = 'none'; // Hide the last question
+            document.getElementById('nextPage').style.display = 'none'; // Hide the next button once result is shown
+            document.getElementById('prevPage').style.display = 'none'; // Hide the next button once result is shown
+            document.getElementById('quiz-score').innerText = `You scored ${score}%.`;
+            displayScoreMessage(score); // Display custom message
+            saveQuizResult(score, correctAnswers); // Save the quiz result to the server
         }
 
-        function resetProgressBar() {
-            const progressBar = document.getElementById('progress-bar');
-            progressBar.style.width = '0%'; // Reset the width to 0
+        function displayScoreMessage(score) {
+            let message = '';
+            if (score === 100) {
+                message = 'Excellent work! You got a perfect score!';
+            } else if (score >= 80) {
+                message = 'Great job! You did really well!';
+            } else if (score >= 50) {
+                message = 'Good effort! Keep practicing!';
+            } else {
+                message = 'Don\'t give up! Keep trying and you will improve!';
+            }
+            document.getElementById('quiz-comment').innerText = message;
         }
 
-        // Show the first question by default
-        document.getElementById('question-1').style.display = 'block';
+        document.getElementById('prevPage').style.display = 'none';
+        document.getElementById('nextPage').style.display = 'none';
     </script>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
