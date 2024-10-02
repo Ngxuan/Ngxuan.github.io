@@ -348,13 +348,15 @@ function filterContent(category) {
             link.style.cursor = 'pointer';
 
             // Attach event listener directly to the element
-            link.addEventListener('click', () => {
+          link.addEventListener('click', () => {
                 if (category === 'book') {
                     openBookViewer(item.file_url, childID, item.eduMaterialID);
                 } else if (category === 'video') {
                     playVideoInFullScreen(item.file_url);
                 } else if (category === 'quiz') {
                     openQuizPage(childID, item.quizID);  // Open the quiz page
+                } else if (category === 'game') {
+                    openGamePage(childID, item.gameID);  // Open the game page
                 }
             });
 
@@ -459,6 +461,13 @@ function openBookViewer(bookUrl, childID, eduMaterialID) {
 }
 function openQuizPage(childID, quizID) {
     window.location.href = `/quizzes/quiz/${childID}/${quizID}/`;
+}
+function openGamePage(childID, gameID) {
+    // Construct the URL to the game page with the necessary parameters in the correct order
+    const gamePageUrl = `/games/play/${childID}/${gameID}`;
+
+    // Redirect or open the game page
+    window.location.href = gamePageUrl;
 }
 // Function to play video in full screen (for videos)
 function playVideoInFullScreen(videoUrl) {

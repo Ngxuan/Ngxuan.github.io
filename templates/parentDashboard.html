@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parent Dashboard</title>
+    {% load static %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: #FFFAE3;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Header Styling */
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 20px 20px;
+            background-color: #fff;
+            border-bottom: 1px solid #eee;
+            width: 100%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+
+        .back-button {
+            text-decoration: none;
+            font-size: 30px;
+            color: black;
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+
+        .header h1 {
+            flex-grow: 1;
+            font-size: 30px;
+            text-align: center;
+            margin: 0;
+            color: #333;
+        }
+
+        .profile-picture {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-left: auto;
+            margin-right: 5%;
+        }
+
+        .profile-picture img {
+            width: 100%;
+            height: auto;
+        }
+
+        .dashboard-container {
+            width: 80%;
+            margin-top: 23%;  /* Adjust margin to leave space for the fixed header */
+        }
+
+        .section {
+            background: #FFF;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            margin-top: 0;
+        }
+
+        .child-list, .game-list, .purchased-game-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+        }
+
+        .child-item, .game-item, .purchased-game-item {
+            width: 120px;
+            margin: 10px;
+            text-align: center;
+
+        }
+
+        .child-item img, .game-item img, .purchased-game-item img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2);
+
+        }
+
+        .child-item img:hover , .game-item img:hover , .purchased-game-item img:hover  {
+            transform: scale(1.05);
+            background-color: #eaeaea;
+
+        }
+
+        .child-item .name, .game-item .name, .purchased-game-item .name {
+            margin-top: 10px;
+            font-weight: bold;
+            color:black;
+        }
+
+        a{
+         text-decoration: none;
+        }
+
+
+        /* Styling for the Add Child Button */
+        .child-item.add-child {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 110px;
+            height: 110px;
+            cursor: pointer;
+            border: 2px dashed #ccc;
+            border-radius: 50%;
+            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            text-decoration: none;
+            color: #666;
+            background-color: #f9f9f9;
+        }
+
+        .child-item.add-child:hover {
+            transform: scale(1.05);
+            background-color: #eaeaea;
+        }
+
+        .child-item.add-child i {
+            font-size: 40px;
+            color: #666;
+        }
+
+        .price-tag {
+            background-color: rgba(217, 217, 217, 0.51);
+            color: #0082FF;
+            padding: 5px 10px;
+            border-radius: 15px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <!-- Back button -->
+        <a href="{% url 'choose_profile' %}" class="back-button">
+            <i class="fa fa-arrow-left"></i>
+        </a>
+
+        <!-- Title -->
+        <h1>Parent Dashboard</h1>
+
+        <!-- Profile Picture (Optional, use if needed) -->
+        <div class="profile-picture">
+            <img src="{% static 'image/childProfile.png' %}" alt="Default Image">
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- Children Section -->
+        <div class="section">
+            <h2>Your Children</h2>
+            <div class="child-list">
+                {% if children %}
+                    {% for child in children %}
+                        <div class="child-item">
+                           <a href="{% url 'child_detail' child_id=child.childID %}">
+                                {% if child.image %}
+                                    <img src="{{ child.image.url }}" alt="{{ child.name }}">
+                                {% else %}
+                                    <img src="{% static 'image/childProfile.png' %}" alt="Default Image">
+                                {% endif %}
+                                <div class="name">{{ child.name }}</div>
+                            </a>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                <!-- Add Child Button with updated structure -->
+                <a href="{% url 'add_child_account' %}" class="child-item add-child">
+                    <i class="fa fa-plus"></i>
+                    <div class="name">Add Child</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Available Games Section -->
+        <div class="section">
+                <h2>Available Games</h2>
+                <div class="game-list">
+                    {% if available_games %}
+                        {% for game in available_games %}
+                            <div class="game-item">
+
+                                    <img src="{{ game.thumbnail_url }}" alt="{{ game.title }}">
+                                    <div class="name">{{ game.title }}</div>
+
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>No available games. Please check back later or add some games.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Purchased Games Section -->
+            <div class="section">
+                <h2>Purchased Games</h2>
+                <div class="purchased-game-list">
+                    {% if purchased_games %}
+                        {% for game in purchased_games %}
+                            <div class="purchased-game-item">
+
+                                    <img src="{{ game.thumbnail_url }}" alt="{{ game.title }}">
+                                    <div class="name">{{ game.title }}</div>
+
+                                {% if game.price %}
+                                    <div class="price-tag">RM {{ game.price }}</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>No purchased games available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+</body>
+</html>

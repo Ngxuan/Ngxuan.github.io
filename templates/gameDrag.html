@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ game.title }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 50px;
+        }
+        .question {
+            width: 100%;
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .draggable {
+            width: 100px;
+            height: 100px;
+            margin: 20px;
+            cursor: pointer;
+            border: 2px solid #333;
+            border-radius: 10px;
+            text-align: center;
+            line-height: 100px;
+            font-size: 18px;
+            background-color: #f2f2f2;
+        }
+        .dropzone {
+            width: 150px;
+            height: 100px;
+            margin: 20px;
+            border: 2px dashed #999;
+            text-align: center;
+            line-height: 100px;
+            background-color: #e7e7e7;
+        }
+        .dropzone.correct {
+            border: 2px solid green;
+        }
+        .dropzone.incorrect {
+            border: 2px solid red;
+        }
+    </style>
+</head>
+<body>
+    <h1>{{ game.title }}</h1>
+    <p>{{ game.description }}</p>
+
+    <div class="container">
+        <div class="question">
+            {% for question in game.questions.all %}
+            <h2>{{ question.question }}</h2>
+            <div class="container">
+                <div class="draggable-container">
+                    <!-- Display draggable options -->
+                    {% for option in question.options.all %}
+                    <div class="draggable" draggable="true" id="option-{{ option.optionID }}" data-option-id="{{ option.optionID }}">
+                        {% if option.image_url %}
+                        <img src="{{ option.image_url }}" alt="{{ option.text }}" width="80" height="80">
+                        {% else %}
+                        {{ option.text }}
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="dropzone-container">
+                    <!-- Create a drop zone for each option -->
+                    {% for option in question.options.all %}
+                    <div class="dropzone" id="dropzone-{{ option.optionID }}" data-correct-option-id="{{ option.optionID }}">
+                        Drop here
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        // Drag and Drop JavaScript functionality
+        const draggables = document.querySelectorAll('.draggable');
+        const dropzones = document.querySelectorAll('.dropzone');
+
+        draggables.forEach(draggable => {
+            draggable.addEventListener('dragstart', () => {
+                draggable.classList.add('dragging');
+            });
+
+            draggable.addEventListener('dragend', () => {
+                draggable.classList.remove('dragging');
+            });
+        });
+
+        dropzones.forEach(dropzone => {
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const dragging = document.querySelector('.dragging');
+                dropzone.appendChild(dragging);
+            });
+
+            dropzone.addEventListener('drop', () => {
+                const dragging = document.querySelector('.dragging');
+                const correctOptionId = dropzone.getAttribute('data-correct-option-id');
+                const draggedOptionId = dragging.getAttribute('data-option-id');
+
+                if (correctOptionId === draggedOptionId) {
+                    dropzone.classList.add('correct');
+                } else {
+                    dropzone.classList.add('incorrect');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -16,10 +16,10 @@ class EducationalMaterialAdminForm(forms.ModelForm):
 
 class EducationalMaterialAdmin(admin.ModelAdmin):
     form = EducationalMaterialAdminForm
-    list_display = ('title', 'type', 'description', 'file_url', 'thumbnail_url')
-    list_filter = ('type',)
+    list_display = ('title', 'type', 'description','status', 'file_url', 'thumbnail_url')
+    list_filter = ('status','type',)
     search_fields = ('title',)
-    fields = ('title', 'description', 'type', 'file_url', 'thumbnail_url', 'upload_file', 'upload_thumbnail')  # Include thumbnail field
+    fields = ('title', 'description', 'type','status', 'file_url', 'thumbnail_url', 'upload_file', 'upload_thumbnail')  # Include thumbnail field
     readonly_fields = ('file_url', 'thumbnail_url')  # Make file_url and thumbnail_url readonly
 
     def save_model(self, request, obj, form, change):
