@@ -1,6 +1,8 @@
-from django.urls import path
-from . import views
+# user/urls.py
 
+from django.urls import path, include
+from . import views
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('signup/', views.signup_view, name='signup'),
@@ -10,5 +12,7 @@ urlpatterns = [
     path('child/<uuid:childID>/', views.child_home, name='child_home'),
     path('dashboard/', views.parent_dashboard, name='parent_dashboard'),
     path('childDetail/<uuid:child_id>/', views.child_detail, name='child_detail'),
-
+    path('subscription-plans/', views.subscription_plans_view, name='subscription_plans'),
+    path('logout/', views.logout_view, name='logout'),
+    path('payment/', include(('component.payment.urls', 'payment'), namespace='payment')),  # Include the payment URLs here with namespace
 ]

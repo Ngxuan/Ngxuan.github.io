@@ -89,3 +89,5 @@ def save_quiz_result(request):
             return JsonResponse({'error': 'Failed to save quiz result'}, status=500)
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+

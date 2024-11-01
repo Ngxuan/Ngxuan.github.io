@@ -53,7 +53,7 @@
 .card img {
     width: 100%; /* Set the width to match the card */
     height: 200px; /* Set a fixed height */
-    object-fit: cover; /* Ensure the image covers the entire area */
+
 }
 
 .cardContainer {
@@ -73,6 +73,64 @@
     text-align: center;
     color: #333;
 }
+
+/* Specific CSS styles for achievement cards */
+.achievement-card {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin: 20px;
+    padding: 10px;
+    background-color: #ffffff;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+    width: 350px; /* Define a fixed width for consistency */
+}
+
+.achievement-container {
+    display: flex;
+    align-items: center;
+}
+
+.achievement-badge {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin-right: 15px;
+}
+
+.achievement-details {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.achievement-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 20 20;
+    color: #333;
+}
+
+.achievement-description {
+    font-size: 14px;
+    margin: 5px 0 0;
+    color: #666;
+}
+
+/* Locked Achievements */
+.locked-achievement {
+    opacity: 0.5; /* Reduce opacity for locked achievements */
+    background: #f0f0f0; /* Light gray background for locked achievements */
+}
+
+.locked-achievement .achievement-title,
+.locked-achievement .achievement-description {
+    color: #999; /* Gray text for locked achievements */
+}
+
 
 /* Bubble Navigation Styles */
 .bubble-container {
@@ -301,8 +359,12 @@ let currentPage = 1;  // Track current page
 const itemsPerPage = 6;  // Number of items to show per page
 
 // Function to fetch and filter content based on category and paginate
+// Function to fetch and filter content based on category and paginate
 function filterContent(category) {
-    fetch(`/libraries/library/?category=${category}`, {
+
+    const cardContainer = document.getElementById('cardContainer');
+    const childID = cardContainer.getAttribute('data-child-id');
+    fetch(`/libraries/library/?category=${category}&childID=${childID}`, {  // Include childID in URL
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
     })
     .then(response => response.json())
@@ -310,7 +372,6 @@ function filterContent(category) {
         const cardContainer = document.getElementById('cardContainer');
         cardContainer.innerHTML = '';  // Clear the current content
 
-        // Retrieve childID from the data attribute of cardContainer
         const childID = cardContainer.getAttribute('data-child-id');
 
         if (!data.content || data.content.length === 0) {
@@ -318,78 +379,108 @@ function filterContent(category) {
             return;
         }
 
-        // Calculate total pages
         const totalItems = data.content.length;
         const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-        // Ensure the current page is within bounds
         if (currentPage > totalPages) {
             currentPage = totalPages;
         } else if (currentPage < 1) {
             currentPage = 1;
         }
 
-        // Paginate content based on the current page
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
         const paginatedContent = data.content.slice(startIndex, endIndex);
 
-        // Create cards for the paginated content
         paginatedContent.forEach(item => {
             const col = document.createElement('div');
             col.classList.add('col-md-4', 'mb-1');
 
             const card = document.createElement('div');
-            card.classList.add('card');
+            // Apply the 'achievement-card' class only for achievement category
+            if (category === 'achievement') {
+                card.classList.add('achievement-card');
 
-            // Create a clickable link for the thumbnail
-            const link = document.createElement('a');
-            link.href = '#';
-            link.style.cursor = 'pointer';
+                // Create the achievement card structure
+                const achievementContainer = document.createElement('div');
+                achievementContainer.classList.add('achievement-container');
 
-            // Attach event listener directly to the element
-          link.addEventListener('click', () => {
-                if (category === 'book') {
-                    openBookViewer(item.file_url, childID, item.eduMaterialID);
-                } else if (category === 'video') {
-                    playVideoInFullScreen(item.file_url);
-                } else if (category === 'quiz') {
-                    openQuizPage(childID, item.quizID);  // Open the quiz page
-                } else if (category === 'game') {
-                    openGamePage(childID, item.gameID);  // Open the game page
+                const badgeImage = document.createElement('img');
+                badgeImage.src = item.thumbnail_url || 'https://via.placeholder.com/100x100';
+                badgeImage.classList.add('achievement-badge');
+
+                const detailsContainer = document.createElement('div');
+                detailsContainer.classList.add('achievement-details');
+
+                const cardTitle = document.createElement('h5');
+                cardTitle.classList.add('achievement-title');
+                cardTitle.innerText = item.title;
+
+                const description = document.createElement('p');
+                description.classList.add('achievement-description');
+                description.innerText = item.description || 'No Description Available';
+
+                detailsContainer.appendChild(cardTitle);
+                detailsContainer.appendChild(description);
+                achievementContainer.appendChild(badgeImage);
+                achievementContainer.appendChild(detailsContainer);
+                card.appendChild(achievementContainer);
+
+                if (!item.status) {
+                    card.classList.add('locked-achievement');
                 }
-            });
 
-            // Determine the thumbnail URL or fallback
-            const thumbnailUrl = item.thumbnail_url || 'https://via.placeholder.com/350x200';
-            const img = document.createElement('img');
-            img.src = thumbnailUrl;
-            img.classList.add('card-img-top');
-            img.alt = item.title;
+            } else {
+                // For other categories, use the standard card structure
+                card.classList.add('card');
 
-            link.appendChild(img);
-            card.appendChild(link);
+                const link = document.createElement('a');
+                link.href = '#';
+                link.style.cursor = 'pointer';
+                link.addEventListener('click', () => {
+                    if (category === 'book') {
+                        openBookViewer(item.file_url, childID, item.eduMaterialID);
+                    } else if (category === 'video') {
+                        playVideoInFullScreen(item.file_url, childID, item.eduMaterialID);
+                    } else if (category === 'quiz') {
+                        openQuizPage(childID, item.quizID);
+                    } else if (category === 'game') {
+                        openGamePage(childID, item.gameID);
+                    }
+                });
 
-            const cardBody = document.createElement('div');
-            cardBody.classList.add('card-body');
+                const thumbnailUrl = item.thumbnail_url || 'https://via.placeholder.com/350x200';
+                const img = document.createElement('img');
+                img.src = thumbnailUrl;
+                img.classList.add('card-img-top');
+                img.alt = item.title;
 
-            const cardTitle = document.createElement('h5');
-            cardTitle.classList.add('card-title');
-            cardTitle.innerText = item.title || 'No Title Available';
+                link.appendChild(img);
+                card.appendChild(link);
 
-            cardBody.appendChild(cardTitle);
-            card.appendChild(cardBody);
+                const cardBody = document.createElement('div');
+                cardBody.classList.add('card-body');
+
+                const cardTitle = document.createElement('h5');
+                cardTitle.classList.add('card-title');
+                cardTitle.innerText = item.title || 'No Title Available';
+
+                cardBody.appendChild(cardTitle);
+                card.appendChild(cardBody);
+            }
+
             col.appendChild(card);
             cardContainer.appendChild(col);
         });
 
-        // Show pagination controls and enable/disable buttons as needed
         updatePaginationControls(totalPages);
     })
     .catch(error => {
         console.error("Error fetching data:", error);
     });
 }
+
+
 
 // Show and update pagination controls based on the total pages
 function updatePaginationControls(totalPages) {
@@ -470,16 +561,53 @@ function openGamePage(childID, gameID) {
     window.location.href = gamePageUrl;
 }
 // Function to play video in full screen (for videos)
-function playVideoInFullScreen(videoUrl) {
+
+// Function to play video in full screen (for videos)
+function playVideoInFullScreen(videoUrl, childID, eduMaterialID) {  // Include childID and eduMaterialID as parameters
     const videoElement = document.createElement('video');
     videoElement.src = videoUrl;
     videoElement.controls = true;
     videoElement.style.display = 'none';
 
     document.body.appendChild(videoElement);
+
+    // Variables to track time spent
+    let startTime = 0;
+    let accumulatedTime = 0;
+    let interval;
+
+    // Event listener to start tracking when the video starts playing
+    videoElement.addEventListener('play', () => {
+        startTime = Date.now();  // Record the start time
+        interval = setInterval(updateTimeSpent, 1000); // Update time every second
+    });
+
+    // Event listener to stop tracking when the video is paused
+    videoElement.addEventListener('pause', () => {
+        if (startTime) {
+            accumulatedTime += Date.now() - startTime; // Add the difference to accumulatedTime
+            startTime = 0;  // Reset start time
+            clearInterval(interval);  // Stop updating the time
+        }
+    });
+
+    // Event listener to stop tracking when the video ends
+    videoElement.addEventListener('ended', () => {
+        if (startTime) {
+            accumulatedTime += Date.now() - startTime;  // Add the remaining time when video ends
+            clearInterval(interval);  // Stop updating the time
+            sendTimeSpent(childID, eduMaterialID, accumulatedTime / 1000);  // Convert milliseconds to seconds and send
+            startTime = 0;
+        }
+        removeVideoElement(videoElement);  // Remove the video element from the DOM
+    });
+
+    // Event listener to handle when the video enters full screen and starts playing
     videoElement.addEventListener('loadedmetadata', () => {
         videoElement.style.display = 'block';
-        videoElement.play();
+        videoElement.play();  // Play the video automatically
+
+        // Request full screen depending on the browser support
         if (videoElement.requestFullscreen) {
             videoElement.requestFullscreen();
         } else if (videoElement.mozRequestFullScreen) {
@@ -491,38 +619,90 @@ function playVideoInFullScreen(videoUrl) {
         }
     });
 
-    // Add event listener to remove the video element when it ends
-    videoElement.addEventListener('ended', () => {
-        removeVideoElement(videoElement);
-    });
+    // Add event listeners to track when exiting full screen
+    document.addEventListener('fullscreenchange', () => handleExitFullscreen(childID, eduMaterialID));
+    document.addEventListener('webkitfullscreenchange', () => handleExitFullscreen(childID, eduMaterialID));
+    document.addEventListener('mozfullscreenchange', () => handleExitFullscreen(childID, eduMaterialID));
+    document.addEventListener('MSFullscreenChange', () => handleExitFullscreen(childID, eduMaterialID));
 
-    // Add event listener to remove the video element when exiting full screen mode
-    document.addEventListener('fullscreenchange', () => {
-        if (!document.fullscreenElement) {
-            removeVideoElement(videoElement);
+    // Function to remove the video element from the DOM
+    function removeVideoElement(videoElement) {
+        if (document.body.contains(videoElement)) {
+            document.body.removeChild(videoElement);
         }
-    });
-    document.addEventListener('webkitfullscreenchange', () => {
-        if (!document.webkitFullscreenElement) {
-            removeVideoElement(videoElement);
-        }
-    });
-    document.addEventListener('mozfullscreenchange', () => {
-        if (!document.mozFullScreenElement) {
-            removeVideoElement(videoElement);
-        }
-    });
-    document.addEventListener('MSFullscreenChange', () => {
-        if (!document.msFullscreenElement) {
-            removeVideoElement(videoElement);
-        }
-    });
-}
+    }
 
-// Function to remove the video element from the DOM
-function removeVideoElement(videoElement) {
-    if (document.body.contains(videoElement)) {
-        document.body.removeChild(videoElement);
+    // Function to handle exiting full screen and recording time spent
+    function handleExitFullscreen(childID, eduMaterialID) {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
+            if (startTime) {
+                accumulatedTime += Date.now() - startTime;  // Add remaining time when exiting full screen
+                clearInterval(interval);  // Stop updating the time
+                sendTimeSpent(childID, eduMaterialID, accumulatedTime / 1000);  // Convert milliseconds to seconds and send
+                startTime = 0;
+            }
+            removeVideoElement(videoElement);  // Remove the video element from the DOM
+        }
+    }
+
+    // Function to send time spent on the video to the server
+    function sendTimeSpent(childID, eduMaterialID, timeSpentInSeconds) {
+        if (!eduMaterialID) {
+            console.error("eduMaterialID is missing or incorrect.");
+            return;
+        }
+
+        console.log(`Child ID: ${childID}, EduMaterial ID: ${eduMaterialID}`); // Log IDs to check for correctness
+
+        // Send the time spent to the server using AJAX
+        fetch(`/eduMaterial/record_time_spent/${childID}/${eduMaterialID}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken(),  // Add CSRF token if required
+            },
+            body: JSON.stringify({
+                timeSpent: timeSpentInSeconds
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                console.log('Time spent recorded successfully.');
+            } else {
+                console.error('Failed to record time spent:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error recording time spent:', error);
+        });
+    }
+
+    // Function to get CSRF token from cookie (if needed)
+    function getCSRFToken() {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 'csrftoken'.length + 1) === 'csrftoken=') {
+                    cookieValue = decodeURIComponent(cookie.substring('csrftoken'.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Function to continuously update the accumulated time
+    function updateTimeSpent() {
+        if (startTime) {
+            const currentTime = Date.now();
+            const timeSpentInMilliseconds = currentTime - startTime;  // Calculate time spent since the last update
+            accumulatedTime += timeSpentInMilliseconds;  // Add to accumulated time
+            startTime = currentTime;  // Reset start time for the next calculation
+            console.log(`Time spent so far: ${accumulatedTime / 1000} seconds`);  // Log for debugging
+        }
     }
 }
 

@@ -5,257 +5,253 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book Viewer</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Include jQuery for AJAX -->
 </head>
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            width: 100%;
-            font-family: 'Arial', sans-serif;
-            background-color: #f5f5f5;
-            overflow: hidden; /* Prevent scrolling */
-        }
+<style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        font-family: 'Arial', sans-serif;
+        background-color: #f5f5f5;
+        overflow: hidden; /* Prevent scrolling */
+    }
 
-        .book-viewer {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh; /* Full height of viewport */
-            width: 100vw; /* Full width of viewport */
-            background-color: #ffffff;
-            position: relative; /* Enable absolute positioning for child elements */
-        }
+    .book-viewer {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh; /* Full height of viewport */
+        width: 100vw; /* Full width of viewport */
+        background-color: #ffffff;
+        position: relative; /* Enable absolute positioning for child elements */
+    }
 
-        /* Content styling */
-        #bookContent {
-            flex: 1; /* Take up remaining space */
-            width: 85%; /* Full width with some padding */
-            height: 80%; /* Adjust height to fit navigation buttons */
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Light shadow effect */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden; /* Hide overflow */
-            background: #ffffff;
-        }
+    #bookContent {
+        flex: 1; /* Take up remaining space */
+        width: 85%; /* Full width with some padding */
+        height: 80%; /* Adjust height to fit navigation buttons */
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Light shadow effect */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden; /* Hide overflow */
+        background: #ffffff;
+    }
 
-        #pdfViewer {
-            width: 100%;
-            height: 100%;
-        }
+    #pdfViewer {
+        width: 100%;
+        height: 100%;
+    }
 
-        /* Home button */
-        .home-button {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: #17a2b8;
-            border: none;
-            border-radius: 50%;
-            padding: 10px;
-            cursor: pointer;
-            z-index: 1000;
-            transition: background 0.3s, transform 0.3s;
-        }
+    /* Home button */
+    .home-button {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: #17a2b8;
+        border: none;
+        border-radius: 50%;
+        padding: 10px;
+        cursor: pointer;
+        z-index: 1000;
+        transition: background 0.3s, transform 0.3s;
+    }
 
-        .home-button:hover {
-            background: #138496;
-            transform: scale(1.1);
-        }
+    .home-button:hover {
+        background: #138496;
+        transform: scale(1.1);
+    }
 
-        .home-button img {
-            width: 30px;
-            height: 30px;
-        }
+    .home-button img {
+        width: 30px;
+        height: 30px;
+    }
 
-        /* Navigation buttons */
-        .nav-button {
-            position: absolute;
-            top: 50%;
+    /* Navigation buttons */
+    .nav-button {
+        position: absolute;
+        top: 50%;
+        background: #17a2b8;
+        border: none;
+        border-radius: 50%;
+        padding: 15px;
+        cursor: pointer;
+        z-index: 1000;
+        transition: background 0.3s, transform 0.3s;
+    }
 
-            background: #17a2b8;
-            border: none;
-            border-radius: 50%;
-            padding: 15px;
-            cursor: pointer;
-            z-index: 1000;
-            transition: background 0.3s, transform 0.3s;
-        }
+    .nav-button:hover {
+        background: #138496;
+        transform: scale(1.1);
+    }
 
-        .nav-button:hover {
-            background: #138496;
-            transform: scale(1.1);
-        }
+    .nav-button img {
+        width: 40px;
+        height: 40px;
+    }
 
-        .nav-button img {
-            width: 40px;
-            height: 40px;
-        }
+    #prevPage {
+        left: 20px;
+        transform: translateY(-50%);
+    }
 
-        /* Left navigation button */
-        #prevPage {
-            left: 20px;
-        }
+    #nextPage {
+        right: 20px;
+        transform: translateY(-50%);
+    }
 
-        /* Right navigation button */
-        #nextPage {
-            right: 20px;
-        }
+    .page-info {
+        position: absolute;
+        bottom: 20px;
+        font-size: 18px;
+        color: #fff;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 10px 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Extra shadow effect */
+    }
 
-        /* Page info styling */
-        .page-info {
-            position: absolute;
-            bottom: 20px;
-            font-size: 18px;
-            color: #fff;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Extra shadow effect */
-        }
-
-        /* Fullscreen style */
-        .fullscreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-    </style>
+    .fullscreen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+</style>
 
 <body>
-    <div class="book-viewer">
-        <!-- Home button -->
-        <a href="{% url 'child_home' childID=childID %}" class="home-button" id="homeButton">
-            <button style="background: transparent; border: none;">
-                <img src="https://img.icons8.com/material-rounded/24/ffffff/home.png" alt="Home">
-            </button>
-        </a>
-
-
-
-        <!-- Display the book content in the canvas for PDF display -->
-        <div id="bookContent">
-            <canvas id="pdfViewer"></canvas>
-        </div>
-
-        <!-- Navigation buttons -->
-        <button id="prevPage" class="nav-button">
-            <img src="https://img.icons8.com/material-rounded/48/ffffff/left.png" alt="Previous">
+<div class="book-viewer">
+    <!-- Home button -->
+    <a href="{% url 'child_home' childID=childID %}" class="home-button" id="homeButton">
+        <button style="background: transparent; border: none;">
+            <img src="https://img.icons8.com/material-rounded/24/ffffff/home.png" alt="Home">
         </button>
-        <button id="nextPage" class="nav-button">
-            <img src="https://img.icons8.com/material-rounded/48/ffffff/right.png" alt="Next">
-        </button>
+    </a>
 
-        <!-- Page info -->
-        <div class="page-info">
-            Page: <span id="pageNum">1</span> / <span id="pageCount">--</span>
-        </div>
+    <!-- Display the book content in the canvas for PDF display -->
+    <div id="bookContent">
+        <canvas id="pdfViewer"></canvas>
     </div>
 
-    <!-- Include the PDF.js library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
-    <script>
-        // URL of the PDF file to view (replace this with your actual book URL from the database)
-        const url = '{{ book_url }}';
+    <!-- Navigation buttons -->
+    <button id="prevPage" class="nav-button">
+        <img src="https://img.icons8.com/material-rounded/48/ffffff/left.png" alt="Previous">
+    </button>
+    <button id="nextPage" class="nav-button">
+        <img src="https://img.icons8.com/material-rounded/48/ffffff/right.png" alt="Next">
+    </button>
 
-        // Initialize variables for PDF document, current page number, and total page count
-        let pdfDoc = null,
-            pageNum = 1,
-            pageRendering = false,
-            pageNumPending = null,
-            scale = 1.5, // You can adjust this scale value to zoom in/out
-            canvas = document.getElementById('pdfViewer'),
-            ctx = canvas.getContext('2d');
+    <!-- Page info -->
+    <div class="page-info">
+        Page: <span id="pageNum">1</span> / <span id="pageCount">--</span>
+    </div>
+</div>
 
-        // Load the PDF document
-        pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
-            pdfDoc = pdfDoc_;
-            document.getElementById('pageCount').textContent = pdfDoc.numPages;
+<!-- Include the PDF.js library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+<script>
+    const url = '{{ book_url }}';  // URL of the PDF file to view
 
-            // Initial page rendering
-            renderPage(pageNum);
-        });
+    // Variables to track PDF document, current page number, and time spent
+    let pdfDoc = null,
+        pageNum = 1,
+        pageRendering = false,
+        pageNumPending = null,
+        scale = 1.5,  // You can adjust this scale value to zoom in/out
+        canvas = document.getElementById('pdfViewer'),
+        ctx = canvas.getContext('2d'),
+        startTime, endTime;
 
-        // Function to render the current page
-        function renderPage(num) {
-            pageRendering = true;
+    // Start time for tracking time spent
+    startTime = new Date();
 
-            // Using the promise to fetch the page
-            pdfDoc.getPage(num).then(function(page) {
-                const viewport = page.getViewport({ scale: scale });
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
+    // Load the PDF document
+    pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
+        pdfDoc = pdfDoc_;
+        document.getElementById('pageCount').textContent = pdfDoc.numPages;
+        renderPage(pageNum);  // Initial page rendering
+    });
 
-                // Render the page into the canvas context
-                const renderContext = {
-                    canvasContext: ctx,
-                    viewport: viewport
-                };
-                const renderTask = page.render(renderContext);
+    // Function to render the current page
+    function renderPage(num) {
+        pageRendering = true;
 
-                // Wait for rendering to finish
-                renderTask.promise.then(function() {
-                    pageRendering = false;
+        pdfDoc.getPage(num).then(function(page) {
+            const viewport = page.getViewport({ scale: scale });
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
 
-                    // If another page is pending rendering, render it
-                    if (pageNumPending !== null) {
-                        renderPage(pageNumPending);
-                        pageNumPending = null;
-                    }
-                });
-            });
+            const renderContext = {
+                canvasContext: ctx,
+                viewport: viewport
+            };
+            const renderTask = page.render(renderContext);
 
-            // Update page counters
-            document.getElementById('pageNum').textContent = num;
-        }
+            renderTask.promise.then(function() {
+                pageRendering = false;
 
-        // Function to queue rendering of the next page
-        function queueRenderPage(num) {
-            if (pageRendering) {
-                pageNumPending = num;
-            } else {
-                renderPage(num);
-            }
-        }
-
-        // Event listener for 'Previous' button
-        document.getElementById('prevPage').addEventListener('click', function() {
-            if (pageNum <= 1) {
-                return;
-            }
-            pageNum--;
-            queueRenderPage(pageNum);
-        });
-
-        // Event listener for 'Next' button
-        document.getElementById('nextPage').addEventListener('click', function() {
-            if (pageNum >= pdfDoc.numPages) {
-                return;
-            }
-            pageNum++;
-            queueRenderPage(pageNum);
-        });
-
-        // Optional: Function to toggle full-screen mode
-        document.addEventListener('dblclick', function () {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
+                if (pageNumPending !== null) {
+                    renderPage(pageNumPending);
+                    pageNumPending = null;
                 }
-            }
+            });
         });
 
-        // Navigate to home page (replace with actual home page URL)
-        document.getElementById('homeButton').addEventListener('click', function () {
-            window.location.href = '/'; // Replace with your home URL
+        // Update page counters
+        document.getElementById('pageNum').textContent = num;
+    }
+
+    // Function to queue rendering of the next page
+    function queueRenderPage(num) {
+        if (pageRendering) {
+            pageNumPending = num;
+        } else {
+            renderPage(num);
+        }
+    }
+
+    // Event listeners for Previous and Next buttons
+    document.getElementById('prevPage').addEventListener('click', function() {
+        if (pageNum <= 1) return;
+        pageNum--;
+        queueRenderPage(pageNum);
+    });
+
+    document.getElementById('nextPage').addEventListener('click', function() {
+        if (pageNum >= pdfDoc.numPages) return;
+        pageNum++;
+        queueRenderPage(pageNum);
+    });
+
+    // Send time spent data when the user leaves or closes the page
+    window.addEventListener('beforeunload', function() {
+        endTime = new Date();
+        const timeSpent = Math.floor((endTime - startTime) / 1000);  // Time spent in seconds
+
+        // Send time spent data to the server using AJAX
+        $.ajax({
+            url: '{% url "record_time_spent" childID=childID eduMaterialID=eduMaterialID %}',
+            method: 'POST',
+            contentType: 'application/json',  // Set content type to JSON
+            data: JSON.stringify({
+                timeSpent: timeSpent,  // Send time spent in seconds
+                csrfmiddlewaretoken: '{{ csrf_token }}'  // Include CSRF token for POST requests
+            }),
+            success: function(response) {
+                console.log('Time spent recorded successfully.');
+            },
+            error: function(xhr, status, error) {
+                console.log('Failed to record time spent. Error:', error);
+                console.log('Status:', status);
+                console.log('Response:', xhr.responseText);
+            }
         });
-    </script>
+    });
+</script>
 </body>
 </html>

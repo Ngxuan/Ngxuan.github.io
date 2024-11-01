@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ game.title }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        /* Reset default margins and paddings */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background: #FFFAE3;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align items to the top */
+            flex-direction: column;
+        }
+
+        /* Header styling */
+        .header {
+            width: 100%;
+            background: #FFFFFF;
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Slight shadow for separation */
+            position: fixed; /* Fix the header at the top */
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin: 0;
+        }
+
+        .back-button {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            color: #333;
+            cursor: pointer;
+            font-size: 24px;
+        }
+
+        /* Main container styling */
+        .container {
+            width: 80%;
+            max-width: 800px; /* Adjusted width */
+            margin: 10px auto 20px auto; /* Adjust margin to account for fixed header height */
+            padding: 80px 70px; /* Padding inside the container */
+            background: #FFFFFF;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Game header section */
+        .game-header {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 20px; /* Space below the header */
+        }
+
+        .game-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 15px;
+            margin-right: 20px; /* Space between image and details */
+            object-fit: contain;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Slight shadow for better separation */
+        }
+
+        /* Game details */
+        .game-details {
+            flex-grow: 1; /* Take remaining space */
+        }
+
+        .game-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0 0 10px;
+            color: #333; /* Darker color for readability */
+        }
+
+        .game-price {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1E90FF; /* Price text color */
+            margin: 10px 0;
+            text-align: center; /* Center the price tag */
+            padding: 5px 10px;
+            background: #E1F5FE;
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .game-price-paid {
+            font-size: 20px;
+            font-weight: bold;
+            color: #FFFFFF;/* Default Price text color */
+            margin: 10px 0;
+            text-align: center;
+            padding: 5px 10px;
+            background: #1E90FF;
+            border-radius: 10px;
+            display: inline-block;
+            border: none;
+            cursor: pointer; /* Hand pointer */
+            transition: background 0.3s, color 0.3s; /* Smooth transition */
+        }
+
+
+
+        /* Game description styling */
+        .game-description {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #555;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        h3 {
+            margin-top: 5%;
+            width: 100%;
+            text-align: left; /* Make heading left-aligned */
+        }
+
+        .game-description {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #555;
+            margin: 20px 0;
+            text-align: left; /* Make paragraph text left-aligned */
+            width: 100%; /* Ensure it takes full width of container */
+        }
+
+        /* Payment button styling */
+        .payment-button {
+            font-size: 18px;
+            color: #fff;
+            background-color: #FF5722;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .payment-button:hover {
+            background-color: #e64a19;
+        }
+
+        /* Responsive styling for smaller screens */
+        @media (max-width: 768px) {
+            .game-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .game-image {
+                margin: 0 0 20px; /* Adjust margin */
+            }
+
+            .game-title {
+                font-size: 24px;
+            }
+
+            .game-description {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Page Header -->
+    <div class="header">
+        <a href="javascript:history.back()" class="back-button">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1>Game Detail</h1>
+    </div>
+
+    <!-- Main Container -->
+<div class="container">
+    <!-- Game Header Section -->
+    <div class="game-header">
+        <img src="{{ game.thumbnail_url }}" class="game-image" alt="{{ game.title }}">
+        <div class="game-details">
+            <h1 class="game-title">{{ game.title }}</h1>
+        </div>
+    </div>
+
+
+
+        <!-- Game Description Section -->
+        <h3>Description</h3>
+        <p class="game-description">{{ game.description }}</p>
+    </div>
+</body>
+</html>

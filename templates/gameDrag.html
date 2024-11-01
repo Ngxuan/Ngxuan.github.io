@@ -4,120 +4,277 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ game.title }}</title>
+    {% load static %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        body {
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
             font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            overflow: hidden;
+            background-image: url("{% static 'image/gamebackground.png' %}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
+
+        .game-container {
+            width: 90%;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .question-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #343a40;
+            margin-bottom: 30px;
+        }
+
         .container {
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
-            margin-top: 50px;
+            gap: 30px;
         }
-        .question {
-            width: 100%;
-            text-align: center;
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
+
         .draggable {
             width: 100px;
             height: 100px;
             margin: 20px;
             cursor: pointer;
-            border: 2px solid #333;
+            border: 2px solid #007bff;
             border-radius: 10px;
             text-align: center;
             line-height: 100px;
             font-size: 18px;
-            background-color: #f2f2f2;
+            background-color: #e9ecef;
+            transition: transform 0.2s ease-in-out;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
+
+        .draggable img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .dropzone-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
         .dropzone {
-            width: 150px;
-            height: 100px;
+            width: 300px;
+            height: 150px;
             margin: 20px;
-            border: 2px dashed #999;
+            border: 2px solid #6c757d;
             text-align: center;
-            line-height: 100px;
-            background-color: #e7e7e7;
+            font-size: 18px;
+            color: #6c757d;
+            border-radius: 10px;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: border 0.2s ease-in-out, background-color 0.2s ease-in-out;
         }
+
         .dropzone.correct {
-            border: 2px solid green;
+            border: 2px solid #28a745;
+            background-color: #d4edda;
+            color: #155724;
         }
+
         .dropzone.incorrect {
-            border: 2px solid red;
+            border: 2px solid #dc3545;
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Additional styling to adjust the image position in the drop zone */
+        .dropzone img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            margin: 0;
+        }
+
+        /* Dragging effect */
+        .dragging {
+            opacity: 0.5;
+            transform: scale(1.2);
         }
     </style>
 </head>
 <body>
-    <h1>{{ game.title }}</h1>
-    <p>{{ game.description }}</p>
+    <div class="game-container">
+        <h1 class="question-title">{{ game.title }}</h1>
+        <p>{{ game.description }}</p>
 
-    <div class="container">
-        <div class="question">
-            {% for question in game.questions.all %}
-            <h2>{{ question.question }}</h2>
-            <div class="container">
-                <div class="draggable-container">
-                    <!-- Display draggable options -->
-                    {% for option in question.options.all %}
-                    <div class="draggable" draggable="true" id="option-{{ option.optionID }}" data-option-id="{{ option.optionID }}">
-                        {% if option.image_url %}
-                        <img src="{{ option.image_url }}" alt="{{ option.text }}" width="80" height="80">
-                        {% else %}
-                        {{ option.text }}
-                        {% endif %}
-                    </div>
-                    {% endfor %}
-                </div>
-
-                <div class="dropzone-container">
-                    <!-- Create a drop zone for each option -->
-                    {% for option in question.options.all %}
-                    <div class="dropzone" id="dropzone-{{ option.optionID }}" data-correct-option-id="{{ option.optionID }}">
-                        Drop here
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endfor %}
+        <!-- Container to display only one question at a time -->
+        <div id="question-container" class="container">
+            <!-- Rendered via JavaScript -->
         </div>
     </div>
 
     <script>
-        // Drag and Drop JavaScript functionality
-        const draggables = document.querySelectorAll('.draggable');
-        const dropzones = document.querySelectorAll('.dropzone');
+        // JavaScript to handle question navigation and drag/drop functionality
 
-        draggables.forEach(draggable => {
-            draggable.addEventListener('dragstart', () => {
-                draggable.classList.add('dragging');
-            });
+        // Question and option data (can be dynamically loaded via Django context)
+        const questions = [
+            {% for question in game.questions.all %}
+                {
+                    id: '{{ question.id }}',
+                    text: '{{ question.question }}',
+                    options: [
+                        {% for option in question.options.all %}
+                        {
+                            id: '{{ option.optionID }}',
+                            text: '{{ option.text }}',
+                            imageUrl: '{{ option.image_url }}'
+                        },
+                        {% endfor %}
+                    ]
+                },
+            {% endfor %}
+        ];
 
-            draggable.addEventListener('dragend', () => {
-                draggable.classList.remove('dragging');
-            });
-        });
+        let currentQuestionIndex = 0; // Track the current question index
+        const correctAnswers = {}; // Track correct answers for each question
 
-        dropzones.forEach(dropzone => {
-            dropzone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                const dragging = document.querySelector('.dragging');
-                dropzone.appendChild(dragging);
-            });
+        // Function to display a question based on the current index
+        function displayQuestion(index) {
+            const questionContainer = document.getElementById('question-container');
+            questionContainer.innerHTML = ''; // Clear the previous question content
 
-            dropzone.addEventListener('drop', () => {
-                const dragging = document.querySelector('.dragging');
-                const correctOptionId = dropzone.getAttribute('data-correct-option-id');
-                const draggedOptionId = dragging.getAttribute('data-option-id');
+            const questionData = questions[index];
 
-                if (correctOptionId === draggedOptionId) {
-                    dropzone.classList.add('correct');
+            // Create question element
+            const questionElement = document.createElement('div');
+            questionElement.classList.add('question');
+            questionElement.innerHTML = `<h2>${questionData.text}</h2>`;
+
+            // Create container for options and drop zones
+            const optionsContainer = document.createElement('div');
+            optionsContainer.classList.add('container');
+
+            // Create draggable options
+            const draggableContainer = document.createElement('div');
+            draggableContainer.classList.add('draggable-container');
+
+            questionData.options.forEach(option => {
+                const optionElement = document.createElement('div');
+                optionElement.classList.add('draggable');
+                optionElement.setAttribute('draggable', 'true');
+                optionElement.setAttribute('data-option-id', option.id);
+
+                // If option has image, show image; otherwise, show text
+                if (option.imageUrl) {
+                    optionElement.innerHTML = `<img src="${option.imageUrl}" alt="${option.text}">`;
                 } else {
-                    dropzone.classList.add('incorrect');
+                    optionElement.textContent = option.text;
                 }
+
+                // Store the initial position of each draggable element
+                initialPositions[optionElement.id] = { parent: optionElement.parentNode, nextSibling: optionElement.nextSibling };
+
+                // Handle drag events
+                optionElement.addEventListener('dragstart', () => optionElement.classList.add('dragging'));
+                optionElement.addEventListener('dragend', () => optionElement.classList.remove('dragging'));
+
+                draggableContainer.appendChild(optionElement);
             });
-        });
+
+            optionsContainer.appendChild(draggableContainer);
+
+            // Create drop zones
+            const dropzoneContainer = document.createElement('div');
+            dropzoneContainer.classList.add('dropzone-container');
+
+            questionData.options.forEach(option => {
+                const dropzoneElement = document.createElement('div');
+                dropzoneElement.classList.add('dropzone');
+                dropzoneElement.setAttribute('data-correct-option-id', option.id);
+                dropzoneElement.textContent = option.text;
+
+                dropzoneElement.addEventListener('dragover', (e) => e.preventDefault());
+
+                dropzoneElement.addEventListener('drop', () => {
+                    const dragging = document.querySelector('.dragging');
+                    const correctOptionId = dropzoneElement.getAttribute('data-correct-option-id');
+                    const draggedOptionId = dragging.getAttribute('data-option-id');
+
+                    // Check if the dragged option matches the correct option
+                    if (correctOptionId === draggedOptionId) {
+                        dropzoneElement.classList.add('correct');
+                        dropzoneElement.appendChild(dragging);
+
+                        // Disable further dragging for the correct answer
+                        dragging.setAttribute('draggable', false);
+                        dragging.classList.remove('draggable');
+
+                        // Mark this drop zone as correct in the correctAnswers object
+                        correctAnswers[correctOptionId] = true;
+
+                        // Check if all drop zones are correctly filled
+                        if (areAllDropzonesCorrect(questionData)) {
+                            setTimeout(() => {
+                                if (currentQuestionIndex < questions.length - 1) {
+                                    currentQuestionIndex++;
+                                    displayQuestion(currentQuestionIndex);
+                                } else {
+                                    alert('Congratulations! You have completed all the questions.');
+                                }
+                            }, 500);
+                        }
+                    } else {
+                        // If incorrect, revert the draggable to its initial position
+                        dropzoneElement.classList.add('incorrect');
+                        setTimeout(() => {
+                            const { parent, nextSibling } = initialPositions[dragging.id];
+                            parent.insertBefore(dragging, nextSibling);  // Move it back to its initial position
+                            dropzoneElement.classList.remove('incorrect');
+                        }, 500);  // Delay to show the incorrect styling momentarily
+                    }
+                });
+
+                dropzoneContainer.appendChild(dropzoneElement);
+            });
+
+            optionsContainer.appendChild(dropzoneContainer);
+            questionElement.appendChild(optionsContainer);
+            questionContainer.appendChild(questionElement);
+        }
+
+        // Function to check if all drop zones are correctly filled for a question
+        function areAllDropzonesCorrect(questionData) {
+            return questionData.options.every(option => correctAnswers[option.id]);
+        }
+
+        // Store the initial position of each draggable element
+        const initialPositions = {};
+
+        // Display the first question on page load
+        displayQuestion(currentQuestionIndex);
     </script>
 </body>
 </html>

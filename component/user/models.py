@@ -1,8 +1,11 @@
 
 
 import uuid
-from django.db import models
+
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from datetime import timedelta
+from django.db import models
+from django.utils import timezone
 
 # Custom user manager for handling Parent (User) creation
 
@@ -30,14 +33,13 @@ class Parent(AbstractBaseUser):
     password = models.CharField(max_length=255)
     phoneNo = models.CharField(max_length=20)
     status = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)  # Required for admin access
-    is_superuser = models.BooleanField(default=False)  # Required for superuser status
-    is_active = models.BooleanField(default=True)  # Required for active status
+    is_staff = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name', 'phoneNo']
 
     objects = ParentManager()
-
 
     def __str__(self):
         return self.email
@@ -48,15 +50,63 @@ class Parent(AbstractBaseUser):
     def has_module_perms(self, app_label):
         return self.is_superuser
 
+    def can_add_child(self):
+        # Allow only three free accounts if there's no subscription
+        return self.children.count() < 3 or (self.subscription and self.subscription.is_active())
 
-# Child model
-class Child(models.Model):
-    childID = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    image = models.ImageField(upload_to='child_images/', blank=True, null=True)  # Optional image
-    name = models.CharField(max_length=255)
-    age = models.IntegerField()
-    parent = models.ForeignKey(Parent, on_delete=models.CASCADE, related_name='children')  # One-to-many relationship with Parent
+    def has_premium_access(self):
+        # Check if the parent has an active subscription for premium access
+        return self.subscription and self.subscription.is_active()
+
+
+class SubscriptionPlan(models.Model):
+    plan_name = models.CharField(max_length=20)
+    price = models.DecimalField(max_digits=5, decimal_places=2)
 
     def __str__(self):
-        return self.name  # Display name as the string representation of Child
+        return f"{self.plan_name} - RM {self.price}"
+
+
+class Subscription(models.Model):
+    parent = models.OneToOneField(Parent, on_delete=models.CASCADE, related_name='subscription')
+    subscription_plan = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True)
+    subscription_start = models.DateTimeField(default=timezone.now)
+    subscription_end = models.DateTimeField(null=True, blank=True)
+
+    def activate_subscription(self, subscription_plan):
+        """Activate or renew a subscription."""
+        self.subscription_plan = subscription_plan
+        self.subscription_start = timezone.now()
+        self.subscription_end = self.calculate_subscription_end(subscription_plan)
+        self.save()
+
+    def calculate_subscription_end(self, subscription_plan):
+        """Set the subscription end date based on the selected plan."""
+        if subscription_plan:
+            if subscription_plan.plan_name == '1 Month':
+                return self.subscription_start + timedelta(days=30)
+            elif subscription_plan.plan_name == '6 Months':
+                return self.subscription_start + timedelta(days=182)  # Approximate 6 months
+            elif subscription_plan.plan_name == '12 Months':
+                return self.subscription_start + timedelta(days=365)
+
+    def is_active(self):
+        """Check if the subscription is currently active."""
+        return timezone.now() < self.subscription_end if self.subscription_end else False
+
+    def __str__(self):
+        return f"{self.parent.name}'s Subscription ({self.subscription_plan})"
+
+
+
+class Child(models.Model):
+    childID = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    image = models.ImageField(upload_to='child_images/', blank=True, null=True)
+    name = models.CharField(max_length=255)
+    age = models.IntegerField()
+    parent = models.ForeignKey(Parent, on_delete=models.CASCADE, related_name='children')
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
 
