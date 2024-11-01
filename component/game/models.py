@@ -45,7 +45,7 @@ class Game(models.Model):
     description = models.TextField(null=True, blank=True)  # Description of the game
     free = models.BooleanField(default=True)  # Indicate if the game is free or not
     status = models.BooleanField(default=True)  # Game status (active or inactive)
-    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  # Price of the game
+
 
     questions = models.ManyToManyField(GameQuestion, related_name='quizzes')
     type = models.ForeignKey(GameType, on_delete=models.SET_NULL, null=True, blank=True,
@@ -56,16 +56,6 @@ class Game(models.Model):
 
     def __str__(self):
         return self.title  # Display title as string representation
-
-
-class GamePurchase(models.Model):
-    purchaseID = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
-    parent = models.ForeignKey(Parent, on_delete=models.CASCADE, related_name='purchases')  # The parent who purchased the game
-    game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name='purchases')  # The game that was purchased
-    purchase_date = models.DateTimeField(default=timezone.now)  # Date when the game was purchased
-
-    def __str__(self):
-        return f"Game: {self.game.title} purchased by {self.parent.username} on {self.purchase_date}"
 
 
 class ChildGame(models.Model):

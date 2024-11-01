@@ -20,36 +20,25 @@ class QuizQuestionAdmin(admin.ModelAdmin):
 
 
 class QuizAdminForm(forms.ModelForm):
-    # Create a custom file field for uploading the quiz logo
     upload_logo = forms.FileField(required=False, label='Upload Quiz Logo to Supabase')
 
     class Meta:
         model = Quiz
         fields = '__all__'
-        exclude = ('quizID',)  # Exclude quizID since it’s non-editable
+        exclude = ('quizID',)
 
     def save(self, commit=True):
-        """
-        Override the save method to handle logo upload to Supabase.
-        """
         instance = super(QuizAdminForm, self).save(commit=False)
         upload_logo = self.cleaned_data.get('upload_logo')
 
         if upload_logo:
             try:
-                # Read the content of the uploaded file
                 file_content = upload_logo.read()  # Read the file content as bytes
                 file_name = f"quiz_logo_{instance.quizID}.png"  # Generate a unique filename for each quiz logo
-
-                # Define the category/folder for quiz logos (stored in 'fyp/quiz' bucket)
                 category = 'quiz'
-
-                # Upload the file to Supabase storage and get the public URL
                 public_url = upload_file_to_supabase(BUCKET_NAME, file_content, file_name, category)
-
-                # If the upload is successful, update the quizLogo field
                 if public_url:
-                    instance.quizLogo = public_url  # Assuming `quizLogo` is a URL field in your Quiz model
+                    instance.thumbnail_url = public_url  # Update the thumbnail_url with the returned URL
                     print(f"Logo uploaded successfully: {public_url}")
                 else:
                     print("Logo upload to Supabase failed.")
@@ -59,6 +48,7 @@ class QuizAdminForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
+
 
 
 # Customizing the display for Quiz with the custom form

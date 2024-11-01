@@ -117,10 +117,10 @@ class GameTypeAdmin(admin.ModelAdmin):
 # Admin class for managing Game with related questions
 class GameAdmin(admin.ModelAdmin):
     form = GameAdminForm  # Use the custom form for Game
-    list_display = ('gameID', 'title', 'type', 'thumbnail_url','price', 'status', 'free')  # Display game details
+    list_display = ('gameID', 'title', 'type', 'thumbnail_url', 'status', 'free')  # Display game details
     list_filter = ('status', 'free', 'type')  # Enable filtering by status, free, and type
     search_fields = ('title', 'type__type_name')  # Enable search by title or type name
-    fields = ('title', 'type', 'description', 'status', 'questions', 'price','free', 'upload_logo')  # Fields to include in the form
+    fields = ('title', 'type', 'description', 'status', 'questions', 'free', 'upload_logo')  # Fields to include in the form
     readonly_fields = ('thumbnail_url',)  # Make thumbnail preview readonly
 
 

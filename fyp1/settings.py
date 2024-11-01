@@ -53,6 +53,9 @@ INSTALLED_APPS = [
     'component.library',
     'component.quiz',
     'component.game',
+    'component.achievement',
+    'component.payment',
+    'paypal.standard.ipn',
 ]
 
 MIDDLEWARE = [
@@ -141,3 +144,7 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+PAYPAL_RECEIVER_EMAIL = 'sb-qq6lt33651428@business.example.com'
+PAYPAL_TEST = True
+

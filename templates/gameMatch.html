@@ -205,50 +205,136 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
 
     <script>
-        let currentQuestionIndex = 0;
+let currentQuestionIndex = 0;
+let totalAttempts = 0;
+let questionAttempts = 0;  // Track attempts for each question
+let startTime;  // Track time spent for each question
+let totalTimeSpent = 0;  // Track total time spent on the game
 
-        // Function to play sound for the question
-        function playSound() {
-            const audio = new Audio('{{ game.thumbnail_url }}');  // Replace with the actual path to your audio file
-            audio.play();
+// Function to play sound for the question
+function playSound() {
+    const audio = new Audio('{{ game.thumbnail_url }}');  // Replace with the actual path to your audio file
+    audio.play();
+}
+
+// Function to check the answer and switch to the next question
+function checkAnswer(selectedOptionID, correctOptionID, questionIndex) {
+    console.log("Selected Option ID:", selectedOptionID);  // Debugging
+    console.log("Correct Option ID:", correctOptionID);    // Debugging
+
+    // Increment attempt counters
+    questionAttempts++;
+    totalAttempts++;
+
+    // Compare the selected option ID with the correct option ID
+    if (selectedOptionID === correctOptionID) {
+        alert('Correct! You selected the right answer.');
+
+        // Calculate time spent on the question
+        const timeSpentOnQuestion = (Date.now() - startTime) / 1000;  // Time spent in seconds
+        totalTimeSpent += timeSpentOnQuestion;
+        console.log(`Time spent on question ${questionIndex + 1}: ${timeSpentOnQuestion} seconds`);
+
+        // Reset start time for next question
+        startTime = Date.now();
+
+        // Hide the current question
+        document.getElementById(`question-${questionIndex}`).classList.remove('active');
+        document.getElementById(`question-${questionIndex}`).classList.add('hidden');
+
+        // Show the next question
+        const nextQuestion = document.getElementById(`question-${questionIndex + 1}`);
+        if (nextQuestion) {
+            nextQuestion.classList.remove('hidden');
+            nextQuestion.classList.add('active');
+            questionAttempts = 0;  // Reset question-specific attempts counter
+            currentQuestionIndex++;
+        } else {
+            showCompletionModal();  // Show the completion modal when game ends
+        }
+    } else {
+        alert('Try again!');
+    }
+}
+
+// Function to show the completion modal and send game data
+function showCompletionModal() {
+    const modal = document.getElementById('completionModal');
+    modal.style.display = 'flex';  // Show the modal
+
+    // Hide the sound button
+    const soundButton = document.querySelector('.sound-button');
+    soundButton.style.display = 'none';
+
+    // Calculate total time spent on the game
+    totalTimeSpent += (Date.now() - startTime) / 1000;  // Add time spent on the last question
+    console.log(`Total time spent on game: ${totalTimeSpent} seconds`);
+    console.log(`Total attempts made: ${totalAttempts}`);
+
+    // Send the game data to the server
+    sendGameCompletionData(totalTimeSpent, totalAttempts);
+}
+
+// Function to send game completion data to the server
+  const recordGameTimeUrl = "{% url 'record_game_time_spent' childID=childID gameID=game.gameID %}";
+    console.log(`Record game time URL: ${recordGameTimeUrl}`);
+
+    // Function to send game completion data to the server
+    function sendGameCompletionData(totalTimeSpent, totalAttempts) {
+        if (!recordGameTimeUrl) {
+            console.error("Record game time URL is missing or incorrect.");
+            return;
         }
 
-        // Function to check the answer and switch to the next question
-        function checkAnswer(selectedOptionID, correctOptionID, questionIndex) {
-            console.log("Selected Option ID:", selectedOptionID);  // Debugging
-            console.log("Correct Option ID:", correctOptionID);    // Debugging
+        console.log(`Sending game data to: ${recordGameTimeUrl}`);  // Log URL to verify correctness
 
-            // Compare the selected option ID with the correct option ID
-            if (selectedOptionID === correctOptionID) {
-                alert('Correct! You selected the right answer.');
-
-                // Hide the current question
-                document.getElementById(`question-${questionIndex}`).classList.remove('active');
-                document.getElementById(`question-${questionIndex}`).classList.add('hidden');
-
-                // Show the next question
-                const nextQuestion = document.getElementById(`question-${questionIndex + 1}`);
-                if (nextQuestion) {
-                    nextQuestion.classList.remove('hidden');
-                    nextQuestion.classList.add('active');
-                    currentQuestionIndex++;
-                } else {
-                    showCompletionModal(); // Show the completion modal when game ends
-                }
+        // Send the game data to the server using AJAX
+        fetch(recordGameTimeUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken(),  // Include CSRF token if required
+            },
+            body: JSON.stringify({
+                timeSpent: totalTimeSpent,      // Send total time spent in seconds
+                attempts: totalAttempts         // Send total number of attempts
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                console.log('Game data recorded successfully.');
             } else {
-                alert('Try again!');
+                console.error('Failed to record game data:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error recording game data:', error);
+        });
+    }
+
+// Function to get CSRF token from cookie (if needed)
+function getCSRFToken() {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, 'csrftoken'.length + 1) === 'csrftoken=') {
+                cookieValue = decodeURIComponent(cookie.substring('csrftoken'.length + 1));
+                break;
             }
         }
+    }
+    return cookieValue;
+}
 
-        // Function to show the completion modal
-        function showCompletionModal() {
-            const modal = document.getElementById('completionModal');
-            modal.style.display = 'flex';  // Show the modal
+// Start the timer when the game starts
+window.onload = function() {
+    startTime = Date.now();  // Record the start time of the game
+};
 
-             // Hide the sound button
-        const soundButton = document.querySelector('.sound-button');
-        soundButton.style.display = 'none';
-        }
+
     </script>
 </body>
 </html>

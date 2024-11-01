@@ -1,11 +1,11 @@
 # views.py
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
-from django.utils import timezone
-import json
+from django.views.decorators.csrf import csrf_exempt
+from datetime import timedelta
+from .models import Child, Game, ChildGame
 import uuid
-from .models import Game, ChildGame, GameType, GameQuestion, GameQuestionOption
-from component.user.models import Child
+import json
 
 # views.py
 def play_game(request, child_id, game_id):
@@ -26,8 +26,8 @@ def play_game(request, child_id, game_id):
     ]
 
     # Determine which template to use based on the game's type
-    if game.type.type_name == 'Drag and Drop':
-        template = 'drag_and_drop.html'
+    if game.type.type_name == 'drag':
+        template = 'gameDrag.html'
     elif game.type.type_name == 'matching':
         template = 'gameMatch.html'
     elif game.type.type_name == 'Multiple Choice':
@@ -39,65 +39,60 @@ def play_game(request, child_id, game_id):
     context = {
         'game': game,
         'childID': child_id,
+        'gameID': game_id,
         'questions_with_options': questions_with_options,
     }
     return render(request, template, context)
 
 
-def save_game_result(request):
-    """
-    Save the game result for the given child game.
-    If the child game does not exist, create it first and then save the result.
-    """
+@csrf_exempt
+def record_game_time_spent(request, childID, gameID):
     if request.method == 'POST':
         try:
-            # Retrieve the game result data from the request body
-            data = json.loads(request.body)
-            print(f"Request Data: {data}")  # Debugging statement to print the incoming data
+            # Parse JSON data from the request body
+            data = json.loads(request.body.decode('utf-8'))
+            time_spent_seconds = data.get('timeSpent', 0)
+            attempts = data.get('attempts', 0)
 
-            # Retrieve childID and gameID from the request data
-            child_id_str = data.get('childID')  # Retrieve childID from request body
-            game_id_str = data.get('gameID')  # Retrieve gameID from request body
-            time_spent = data.get('timeSpent', 0)  # Default to 0 if not provided
+            # Retrieve the child and game using their unique IDs
+            child = get_object_or_404(Child, childID=childID)
+            game = get_object_or_404(Game, gameID=gameID)
 
-            if not child_id_str or not game_id_str:
-                return JsonResponse({'error': 'Missing child or game ID'}, status=400)
+            # Convert the time spent in seconds to a timedelta object
+            time_spent_duration = timedelta(seconds=int(time_spent_seconds))
 
-            # Convert string IDs to UUID objects
-            try:
-                child_id = uuid.UUID(child_id_str)  # Use the correct UUID conversion for childID
-                game_id = uuid.UUID(game_id_str)  # Use the correct UUID conversion for gameID
-                print(f"Converted UUIDs - Child ID: {child_id}, Game ID: {game_id}")  # Debugging statement
-            except ValueError:
-                return JsonResponse({'error': 'Invalid UUID format for childID or gameID'}, status=400)
-
-            # Check if the child exists using the childID field, not the default id
-            child = Child.objects.filter(childID=child_id).first()
-            if not child:
-                print(f"No child found with childID: {child_id}")  # Debugging statement
-                return JsonResponse({'error': f'No Child matches the given query: {child_id}'}, status=400)
-
-            # Check if the game exists
-            game = Game.objects.filter(gameID=game_id).first()
-            if not game:
-                print(f"No game found with gameID: {game_id}")  # Debugging statement
-                return JsonResponse({'error': f'No Game matches the given query: {game_id}'}, status=400)
-
-            # Retrieve or create the ChildGame instance using UUIDs
+            # Check if a record already exists for this child and game
             child_game, created = ChildGame.objects.get_or_create(
-                child=child,
-                game=game,
-                defaults={'playDate': timezone.now(), 'timeSpent': timezone.now() - timezone.now()}  # Set default values
+                child=child, game=game,
+                defaults={'childGameID': str(uuid.uuid4()), 'timeSpent': timedelta(0)}
             )
 
-            # Update the ChildGame instance with the game result
+            # If the record already exists, accumulate the time spent
+            if not created:
+                child_game.timeSpent += time_spent_duration
+            else:
+                child_game.timeSpent = time_spent_duration
 
-            child_game.timeSpent = timezone.timedelta(seconds=time_spent)  # Convert time spent to timedelta
+            # Save the child game record
             child_game.save()
 
-            return JsonResponse({'message': 'Game result saved successfully'})
-        except Exception as e:
-            print(f"Error saving game result: {e}")  # Print the error for debugging
-            return JsonResponse({'error': 'Failed to save game result'}, status=500)
-    else:
-        return JsonResponse({'error': 'Invalid request method'}, status=400)
+            # Return the total time spent in seconds (converted back from timedelta)
+            total_time_spent_seconds = child_game.timeSpent.total_seconds()
+            return JsonResponse({'status': 'success', 'totalTimeSpent': total_time_spent_seconds})
+
+        except Child.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Child not found.'}, status=404)
+
+        except Game.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Game not found'}, status=404)
+
+
+def game_detail(request, game_id):
+    # Retrieve the game object by ID
+    game = get_object_or_404(Game, gameID=game_id)
+
+    # Pass the game object to the template for rendering
+    context = {
+        'game': game
+    }
+    return render(request, 'gameDetail.html', context)

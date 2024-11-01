@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Plans</title>
+    {% load static %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: #FFFAE3;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Header Styling */
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background-color: #fff;
+            border-bottom: 1px solid #eee;
+            width: 100%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 40px;
+            z-index: 1000;
+        }
+
+        .back-button {
+            text-decoration: none;
+            font-size: 30px;
+            color: black;
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+
+        .header h1 {
+            flex-grow: 1;
+            font-size: 30px;
+            text-align: center;
+            margin: 0;
+            color: #333;
+        }
+
+        /* Main Content Wrapper */
+        .main-content {
+            width: 80%;
+            margin: 100px auto; /* Adjusted margin to sit below the header */
+            padding-bottom: 20px;
+        }
+
+        .section {
+            background: #FFF;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            margin-top: 0;
+        }
+
+        .subscription-description {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .subscription-plans {
+            display: flex;
+            justify-content: space-around;
+            gap: 20px;
+        }
+
+        .plan {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 200px;
+        }
+
+        .plan h3 {
+            margin: 0;
+            color: #333;
+        }
+
+        .plan p {
+            margin: 5px 0;
+            font-size: 16px;
+            color: #666;
+        }
+
+        .plan p strong {
+            font-size: 24px;
+            color: #333;
+        }
+
+        .select-plan {
+            margin-top: 15px;
+            background-color: #FF007F;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .select-plan:hover {
+            background-color: #cc0066;
+        }
+
+                .active-plan {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: left;
+            position: relative;
+            width: 250px;
+            margin: auto;
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #28a745;
+            color: #ffffff;
+            font-size: 12px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .renew-date {
+            font-size: 14px;
+            color: #333;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="{% url 'parent_dashboard' %}" class="back-button">
+            <i class="fa fa-arrow-left"></i>
+        </a>
+        <h1>Subscription Plans</h1>
+    </div>
+
+    <div class="main-content">
+        <!-- Subscription Description Section -->
+        <div class="section">
+            <h2>Unlock Unlimited Access!</h2>
+            <div class="subscription-description">
+                <p>With our subscription plan, you can create unlimited accounts for your children and give them access to all games available on our platform. Enjoy peace of mind as your children explore a wide range of educational and entertaining content designed to foster learning and creativity.</p>
+                <p>Our subscription allows you to:</p>
+                <ul>
+                    <li>Create as many child accounts as you need.</li>
+                    <li>Access all games without any restrictions.</li>
+                    <li>Stay updated with new game releases and features.</li>
+                    <li>Enhance your children's learning experience with a variety of activities.</li>
+                </ul>
+                <p>Join us today and provide your children with the best gaming and learning experience!</p>
+            </div>
+        </div>
+
+        <!-- Check if parent has an active subscription -->
+        {% if active_subscription %}
+            <!-- Display Active Subscription -->
+            <div class="section">
+                <h2>Your Active Subscription</h2>
+                <div class="active-plan">
+                    <div class="status-badge">Active</div>
+                    <h3>{{ active_subscription.subscription_plan.plan_name }}</h3>
+                    <p><strong>RM {{ active_subscription.subscription_plan.price }}</strong> billed {{ active_subscription.subscription_plan.billing_cycle }}</p>
+                    <p class="renew-date">Subscription Ends On: <strong>{{ active_subscription.subscription_end|date:"Y-m-d" }}</strong></p>
+                </div>
+            </div>
+        {% else %}
+            <!-- Display Available Subscription Plans for Selection -->
+            <div class="section">
+                <h2>Choose Your Plan</h2>
+                <div class="subscription-plans">
+                    {% for plan in plans %}
+                        <div class="plan">
+                            <h3>{{ plan.plan_name }}</h3>
+                            <p><strong>RM {{ plan.price }}</strong> billed every {{ plan.billing_cycle }}</p>
+                            <form action="{% url 'payment:create_subscription_payment' plan.id %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="select-plan">Select plan</button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

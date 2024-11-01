@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful</title>
+    <style>
+        /* Basic Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Body Styling */
+        body, html {
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color:#E8E8E8;
+        }
+
+        /* Container Styling */
+        .container {
+            background-color: #ffffff;
+            color: #333333;
+            width: 90%;
+            max-width: 400px;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Success Icon */
+        .success-icon {
+            width: 100px; /* Increased size */
+            height: 100px; /* Increased size */
+            background-color: #8bc34a; /* Green color */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .success-icon i {
+            font-size: 0px; /* Increased tick size */
+            color: #ffffff;
+        }
+
+        /* Header */
+        .container h1 {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        /* Subtitle */
+        .container p.subtitle {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        /* Transaction ID Styling */
+        .transaction-info {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 15px;
+        }
+
+        /* Button */
+        .dashboard-button {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffffff;
+            background-color: #4CAF50; /* Green color for the button */
+            border: 2px solid #4CAF50;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .dashboard-button:hover {
+            background-color: #45a049;
+            border-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Success Icon -->
+    <div class="success-icon">
+        <i class="fa fa-check" style="font-size:48px;color:white"></i> <!-- Font Awesome check icon -->
+    </div>
+
+    <!-- Header -->
+    <h1>Subscription Successful</h1>
+
+    <!-- Subtitle -->
+    <p class="subtitle">Your subscription has been activated successfully!</p>
+
+    <!-- Transaction ID -->
+    <div class="transaction-info">
+        <p>Your subscription is now active. Enjoy unlimited access to all features!</p>
+    </div>
+
+    <!-- Button to Go to Dashboard -->
+    <a href="{% url 'parent_dashboard' %}" class="dashboard-button">Go to Dashboard</a>
+</div>
+
+
+    <!-- Include Font Awesome for checkmark icon -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+</body>
+</html>
