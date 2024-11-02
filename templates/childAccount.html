@@ -11,21 +11,22 @@
     <style>
         html, body {
             height: 100%; /* Ensure full height for the body */
+            margin: 0;
         }
 
         body {
             font-family: 'Arial', sans-serif;
             background-color: rgba(254, 250, 160, 0.19);
             text-align: center;
-            margin: 3%;
-            padding: 0;
+            display: flex;
+            flex-direction: column;
         }
 
         .container {
-            min-height: calc(100vh - 100px); /* Adjust height to leave space for the footer */
             display: flex;
             flex-direction: column;
-            justify-content: space-between; /* Distribute space between children */
+            justify-content: space-between;
+            min-height: 100vh; /* Make container fill the viewport height */
             padding: 50px;
         }
 
@@ -44,14 +45,14 @@
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
-            gap: 30px; /* Space between profiles */
-            margin-top:5%;
+            gap: 30px;
+            margin-top: 5%;
         }
 
         .profile {
             text-align: center;
-            cursor: pointer;
-            flex: 0 1 150px; /* Set a flex-basis of 150px to maintain profile size */
+            flex: 0 1 150px;
+            position: relative;
         }
 
         .profile img {
@@ -61,11 +62,13 @@
             box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2);
             transition: transform 0.3s ease;
         }
-        .profile a{
-             text-decoration: none;
+
+        .profile a {
+            text-decoration: none;
         }
+
         .profile img:hover {
-            transform: scale(1.05); /* Slight zoom on hover */
+            transform: scale(1.05);
         }
 
         .profile-name {
@@ -75,9 +78,10 @@
             color: #333;
         }
 
+        /* Footer styling */
         .footer {
-
-            margin-top: 10%; /* Push footer to the bottom */
+            margin-top: auto;
+            padding-top: 20px;
         }
 
         .footer a {
@@ -125,16 +129,19 @@
         <div class="profiles">
             {% if children %}
                 {% for child in children %}
-                    <div class="profile">
-                        <a href="{% url 'child_home' child.childID %}">
-                            {% if child.image %}
-                                <img src="{{ child.image.url }}" alt="{{ child.name }}">
-                            {% else %}
-                                <img src="{% static 'image/childProfile.png' %}" alt="Default Image">
-                            {% endif %}
-                            <div class="profile-name">{{ child.name }}</div>
-                        </a>
-                    </div>
+                    <!-- Only display profiles if there is an active subscription or if the count is 3 or less -->
+                    {% if active_subscription or forloop.counter <= 3 %}
+                        <div class="profile">
+                            <a href="{% url 'child_home' child.childID %}">
+                                {% if child.image %}
+                                    <img src="{{ child.image.url }}" alt="{{ child.name }}">
+                                {% else %}
+                                    <img src="{% static 'image/childProfile.png' %}" alt="Default Image">
+                                {% endif %}
+                                <div class="profile-name">{{ child.name }}</div>
+                            </a>
+                        </div>
+                    {% endif %}
                 {% endfor %}
             {% else %}
                 <div class="profile">
