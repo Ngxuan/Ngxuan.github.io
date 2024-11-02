@@ -68,23 +68,36 @@ def logout_view(request):
 
 @login_required  # Ensure the parent is logged in
 def add_child_account(request):
-    # Check the number of children associated with the logged-in parent
+    # Get the logged-in parent
     parent = request.user
+
+    # Check the number of children associated with the parent
     existing_children_count = Child.objects.filter(parent=parent).count()
+    # Check if there is an active subscription for the parent
+    active_subscription = Subscription.objects.filter(parent=parent, subscription_end__gt=timezone.now()).first()
 
-    # If the parent already has 3 children, redirect to a payment page
+    # If the parent already has 3 children and no active subscription, redirect to subscription plans
     if existing_children_count >= 3:
-        messages.info(request, "You have reached the maximum number of child accounts. Please upgrade to add more.")
-        return redirect('payment_page')  # Replace 'payment_page' with the actual name of the payment URL
+        if active_subscription:
+            # If there is an active subscription, proceed with the form submission
+            form = ChildAccountForm(request.POST, request.FILES)
+            if form.is_valid():
+                child = form.save(commit=False)
+                child.parent = parent  # Associate the child with the logged-in parent
+                child.save()  # UUID for childID will be generated automatically
+                return redirect('parent_dashboard')  # Redirect to choose profile or parent dashboard
+        else:
+            # Redirect to subscription plans if no active subscription is found
+            return redirect('subscription_plans')
 
-    # Continue with the regular child account creation process if the limit has not been reached
+    # If the number of children is below the limit, proceed with the form display and submission
     if request.method == 'POST':
         form = ChildAccountForm(request.POST, request.FILES)
         if form.is_valid():
             child = form.save(commit=False)
             child.parent = parent  # Associate the child with the logged-in parent
             child.save()  # UUID for childID will be generated automatically
-            return redirect('choose_profile')  # Redirect to choose profile or parent dashboard
+            return redirect('parent_dashboard')  # Redirect to choose profile or parent dashboard
     else:
         form = ChildAccountForm()
 
@@ -93,9 +106,18 @@ def add_child_account(request):
 
 @login_required
 def choose_profile_view(request):
-    # Get all children associated with the logged-in parent
-    children = Child.objects.filter(parent=request.user)
-    return render(request, 'childAccount.html', {'children': children})
+    # Get only active children associated with the logged-in parent
+    children = Child.objects.filter(parent=request.user, is_active=True)
+
+    # Check if there's an active subscription for the parent
+    active_subscription = Subscription.objects.filter(
+        parent=request.user, subscription_end__gt=timezone.now()
+    ).exists()
+
+    return render(request, 'childAccount.html', {
+        'children': children,
+        'active_subscription': active_subscription,
+    })
 
 
 def child_home(request, childID):
@@ -107,7 +129,7 @@ def child_home(request, childID):
 def parent_dashboard(request):
     """
     View to render the parent dashboard with child profiles and games,
-    adjusting content based on the parent's subscription status.
+    showing only active child accounts.
     """
     # Fetch the parent using the logged-in user's email
     parent = get_object_or_404(Parent, email=request.user.email)
@@ -116,15 +138,11 @@ def parent_dashboard(request):
     subscription = getattr(parent, 'subscription', None)  # Safely get the subscription if it exists
     has_active_subscription = subscription.is_active() if subscription else False
 
-    # Get all children associated with this parent
-    # Limit to three children if no active subscription
-    children = Child.objects.filter(parent=parent).order_by('name')
-    if not has_active_subscription:
-        children = children[:3]  # Limit to three if no active subscription
+    # Get only active children associated with this parent
+    children = Child.objects.filter(parent=parent, is_active=True).order_by('name')
 
-    # Select the first child as the default selected child if children exist
+    # Select the first active child as the default selected child if any exist
     selected_child = children.first() if children.exists() else None
-
 
     # Separate games into free and non-free categories
     available_games = Game.objects.filter(status=True, free=True)  # Free active games
@@ -141,6 +159,8 @@ def parent_dashboard(request):
     }
 
     return render(request, 'parentDashboard.html', context)
+
+
 
 
 def convert_to_seconds(value):
