@@ -6,6 +6,23 @@ from component.game.models import Game
 from component.user.models import Child
 from component.achievement.models import Achievement, ChildAchievement
 import uuid
+import logging
+import os
+import fitz  # PyMuPDF for PDF text extraction
+from django.http import JsonResponse, HttpResponse
+from django.views import View
+from resemble import Resemble
+from django.core.files.temp import NamedTemporaryFile
+
+# books/views.py
+import fitz  # PyMuPDF for PDF text extraction
+import requests
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from resemble import Resemble
+import json
+
+
 
 def library(request):
     """Render the library page and handle filtering based on categories."""
@@ -90,3 +107,72 @@ def library(request):
         return JsonResponse({'content': content_list}, safe=False)
 
     return render(request, 'childHome.html', {'materials': filtered_content, 'selected_category': category})
+
+
+logger = logging.getLogger(__name__)
+
+# Azure TTS API configurations
+AZURE_TTS_KEY = os.getenv('AZURE_TTS_KEY', '8xgC0N0p6m1ynBqw11zDkdssqWprB7LSRpCd1IvqW4jASLPlFjIxJQQJ99AKACHYHv6XJ3w3AAAYACOGS9vE')
+AZURE_REGION = os.getenv('AZURE_REGION', 'eastus2')
+TOKEN_URL = f'https://{AZURE_REGION}.api.cognitive.microsoft.com/sts/v1.0/issueToken'
+TTS_URL = f'https://{AZURE_REGION}.tts.speech.microsoft.com/cognitiveservices/v1'
+
+
+def get_azure_access_token():
+    headers = {'Ocp-Apim-Subscription-Key': AZURE_TTS_KEY}
+    response = requests.post(TOKEN_URL, headers=headers)
+    if response.status_code == 200:
+        return response.text
+    else:
+        logger.error(f"Failed to get token: {response.status_code} - {response.text}")
+        return None
+
+
+def azure_text_to_speech(text, voice_name="en-US-JennyNeural"):
+    token = get_azure_access_token()
+    if not token:
+        return None
+
+    headers = {
+        'Authorization': f'Bearer {token}',
+        'Content-Type': 'application/ssml+xml',
+        'X-Microsoft-OutputFormat': 'audio-24khz-48kbitrate-mono-mp3'
+    }
+
+    ssml = f"""
+    <speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='en-US'>
+        <voice name='{voice_name}'>{text}</voice>
+    </speak>
+    """
+
+    response = requests.post(TTS_URL, headers=headers, data=ssml)
+    if response.status_code == 200:
+        return response.content  # Return the raw audio data
+    else:
+        logger.error(f"TTS request failed: {response.status_code} - {response.text}")
+        return None
+
+
+@csrf_exempt
+def pdf_to_tts_view(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            text = data.get('text', '')
+            if not text:
+                return JsonResponse({'error': 'No text provided for TTS'}, status=400)
+
+            # Generate TTS audio and return it as a stream
+            audio_data = azure_text_to_speech(text)
+            if audio_data:
+                response = HttpResponse(audio_data, content_type='audio/mpeg')
+                response['Content-Disposition'] = 'inline; filename="tts_audio.mp3"'
+                return response
+            else:
+                return JsonResponse({'error': 'Failed to generate TTS'}, status=500)
+
+        except Exception as e:
+            logger.exception("An error occurred during TTS generation")
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
