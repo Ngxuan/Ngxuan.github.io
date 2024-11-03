@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book Viewer</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Include jQuery for AJAX -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <style>
     body, html {
@@ -15,7 +16,7 @@
         width: 100%;
         font-family: 'Arial', sans-serif;
         background-color: #f5f5f5;
-        overflow: hidden; /* Prevent scrolling */
+        overflow: hidden;
     }
 
     .book-viewer {
@@ -23,22 +24,22 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        height: 100vh; /* Full height of viewport */
-        width: 100vw; /* Full width of viewport */
+        height: 100vh;
+        width: 100vw;
         background-color: #ffffff;
-        position: relative; /* Enable absolute positioning for child elements */
+        position: relative;
     }
 
     #bookContent {
-        flex: 1; /* Take up remaining space */
-        width: 85%; /* Full width with some padding */
-        height: 80%; /* Adjust height to fit navigation buttons */
+        flex: 1;
+        width: 85%;
+        height: 80%;
         border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Light shadow effect */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         display: flex;
         justify-content: center;
         align-items: center;
-        overflow: hidden; /* Hide overflow */
+        overflow: hidden;
         background: #ffffff;
     }
 
@@ -47,7 +48,6 @@
         height: 100%;
     }
 
-    /* Home button */
     .home-button {
         position: absolute;
         top: 20px;
@@ -71,7 +71,6 @@
         height: 30px;
     }
 
-    /* Navigation buttons */
     .nav-button {
         position: absolute;
         top: 50%;
@@ -112,15 +111,30 @@
         background: rgba(0, 0, 0, 0.7);
         padding: 10px 20px;
         border-radius: 15px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Extra shadow effect */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
 
-    .fullscreen {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
+    .volume-button {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: #17a2b8;
+        border: none;
+        border-radius: 50%;
+        padding: 10px;
+        cursor: pointer;
+        z-index: 1000;
+        transition: background 0.3s, transform 0.3s;
+    }
+
+    .volume-button:hover {
+        background: #138496;
+        transform: scale(1.1);
+    }
+
+    .volume-button i {
+        color: #ffffff;
+        font-size: 24px;
     }
 </style>
 
@@ -132,6 +146,11 @@
             <img src="https://img.icons8.com/material-rounded/24/ffffff/home.png" alt="Home">
         </button>
     </a>
+
+    <!-- Volume button for TTS -->
+    <button class="volume-button" id="volumeButton">
+        <i class="fas fa-volume-up"></i>
+    </button>
 
     <!-- Display the book content in the canvas for PDF display -->
     <div id="bookContent">
@@ -152,106 +171,185 @@
     </div>
 </div>
 
-<!-- Include the PDF.js library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
 <script>
-    const url = '{{ book_url }}';  // URL of the PDF file to view
+// Set the path to the worker script
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js';
+const url = '{{ book_url }}';  // URL of the PDF file to view
 
-    // Variables to track PDF document, current page number, and time spent
-    let pdfDoc = null,
-        pageNum = 1,
-        pageRendering = false,
-        pageNumPending = null,
-        scale = 1.5,  // You can adjust this scale value to zoom in/out
-        canvas = document.getElementById('pdfViewer'),
-        ctx = canvas.getContext('2d'),
-        startTime, endTime;
+// Variables to track PDF document, current page number, and time spent
+let pdfDoc = null,
+    pageNum = 1,
+    pageRendering = false,
+    pageNumPending = null,
+    scale = 1.5,
+    canvas = document.getElementById('pdfViewer'),
+    ctx = canvas.getContext('2d'),
+    startTime, endTime;
 
-    // Start time for tracking time spent
-    startTime = new Date();
+startTime = new Date();
 
-    // Load the PDF document
-    pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
-        pdfDoc = pdfDoc_;
-        document.getElementById('pageCount').textContent = pdfDoc.numPages;
-        renderPage(pageNum);  // Initial page rendering
-    });
+// Load the PDF document
+pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
+    pdfDoc = pdfDoc_;
+    document.getElementById('pageCount').textContent = pdfDoc.numPages;
+    renderPage(pageNum);  // Initial page rendering
+});
 
-    // Function to render the current page
-    function renderPage(num) {
-        pageRendering = true;
+// Function to render the current page
+function renderPage(num) {
+    pageRendering = true;
+    pdfDoc.getPage(num).then(function(page) {
+        const viewport = page.getViewport({ scale: scale });
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
 
-        pdfDoc.getPage(num).then(function(page) {
-            const viewport = page.getViewport({ scale: scale });
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
+        const renderContext = {
+            canvasContext: ctx,
+            viewport: viewport
+        };
+        const renderTask = page.render(renderContext);
 
-            const renderContext = {
-                canvasContext: ctx,
-                viewport: viewport
-            };
-            const renderTask = page.render(renderContext);
+        renderTask.promise.then(function() {
+            pageRendering = false;
+            if (pageNumPending !== null) {
+                renderPage(pageNumPending);
+                pageNumPending = null;
+            }
 
-            renderTask.promise.then(function() {
-                pageRendering = false;
+            // Reset TTS status on each new page render
+            ttsInProgress = false;
 
-                if (pageNumPending !== null) {
-                    renderPage(pageNumPending);
-                    pageNumPending = null;
-                }
-            });
-        });
-
-        // Update page counters
-        document.getElementById('pageNum').textContent = num;
-    }
-
-    // Function to queue rendering of the next page
-    function queueRenderPage(num) {
-        if (pageRendering) {
-            pageNumPending = num;
-        } else {
-            renderPage(num);
-        }
-    }
-
-    // Event listeners for Previous and Next buttons
-    document.getElementById('prevPage').addEventListener('click', function() {
-        if (pageNum <= 1) return;
-        pageNum--;
-        queueRenderPage(pageNum);
-    });
-
-    document.getElementById('nextPage').addEventListener('click', function() {
-        if (pageNum >= pdfDoc.numPages) return;
-        pageNum++;
-        queueRenderPage(pageNum);
-    });
-
-    // Send time spent data when the user leaves or closes the page
-    window.addEventListener('beforeunload', function() {
-        endTime = new Date();
-        const timeSpent = Math.floor((endTime - startTime) / 1000);  // Time spent in seconds
-
-        // Send time spent data to the server using AJAX
-        $.ajax({
-            url: '{% url "record_time_spent" childID=childID eduMaterialID=eduMaterialID %}',
-            method: 'POST',
-            contentType: 'application/json',  // Set content type to JSON
-            data: JSON.stringify({
-                timeSpent: timeSpent,  // Send time spent in seconds
-                csrfmiddlewaretoken: '{{ csrf_token }}'  // Include CSRF token for POST requests
-            }),
-            success: function(response) {
-                console.log('Time spent recorded successfully.');
-            },
-            error: function(xhr, status, error) {
-                console.log('Failed to record time spent. Error:', error);
-                console.log('Status:', status);
-                console.log('Response:', xhr.responseText);
+            // Auto-trigger TTS if it's active
+            if (ttsActive) {
+                setTimeout(() => {
+                    requestTTSForPage(page);
+                }, 100); // Delay slightly to ensure TTS only starts after rendering completes
             }
         });
     });
+
+    document.getElementById('pageNum').textContent = num;
+}
+
+// Queue rendering of the next page
+function queueRenderPage(num) {
+    if (pageRendering) {
+        pageNumPending = num;
+    } else {
+        renderPage(num);
+    }
+}
+
+// Global variables for audio playback and TTS status
+let audio = null;
+let ttsActive = false;    // Track if TTS should auto-play on page navigation
+let ttsInProgress = false; // Track if a TTS request is in progress
+
+// Function to stop and remove audio if it's playing
+function stopAudio() {
+    if (audio) {
+        audio.pause();               // Stop audio playback
+        audio.currentTime = 0;       // Reset playback position
+        audio.src = '';              // Clear the audio source to release memory
+        audio = null;                // Remove the audio object
+    }
+}
+
+// Toggle TTS on volume button click
+document.getElementById('volumeButton').addEventListener('click', function() {
+    if (ttsActive) {
+        // If TTS is active, stop it and turn off auto-TTS
+        stopAudio();
+        ttsActive = false;
+        ttsInProgress = false;  // Reset the TTS in progress flag
+    } else {
+        // Enable TTS and start reading the current page
+        ttsActive = true;
+        pdfDoc.getPage(pageNum).then(function(page) {
+            requestTTSForPage(page);
+        });
+    }
+});
+
+function requestTTSForPage(page) {
+    if (ttsInProgress) {
+        stopAudio();  // Ensure that any ongoing TTS is stopped before proceeding
+    }
+
+    ttsInProgress = true;       // Mark TTS as in progress
+    page.getTextContent().then(function(textContent) {
+        const text = textContent.items.map(item => item.str).join(' ').trim();
+        if (!text) {
+            console.log("No text available for TTS on this page.");
+            ttsInProgress = false;  // Reset flag if no text is found
+            return;
+        }
+
+        $.ajax({
+            url: '{% url "pdf_to_tts_view" %}',
+            method: 'POST',
+            contentType: 'application/json',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            data: JSON.stringify({ text: text }),
+            xhrFields: { responseType: 'blob' },
+            success: function(blob) {
+                stopAudio();  // Stop any previous audio before playing new one
+                const audioURL = URL.createObjectURL(blob);
+                audio = new Audio(audioURL);
+                audio.play();
+                audio.onended = function() {
+                    ttsInProgress = false;  // Reset flag when audio ends
+                };
+            },
+            error: function(xhr, status, error) {
+                console.error('Failed to generate TTS:', error);
+                ttsInProgress = false;  // Reset flag on error
+            }
+        });
+    });
+}
+
+// Event listeners for Previous and Next buttons with audio stop
+document.getElementById('prevPage').addEventListener('click', function() {
+    if (pageNum <= 1) return;
+    stopAudio();  // Stop audio when navigating to previous page
+    pageNum--;
+    queueRenderPage(pageNum);
+});
+
+document.getElementById('nextPage').addEventListener('click', function() {
+    if (pageNum >= pdfDoc.numPages) return;
+    stopAudio();  // Stop audio when navigating to next page
+    pageNum++;
+    queueRenderPage(pageNum);
+});
+
+// Send time spent data when the user leaves or closes the page
+window.addEventListener('beforeunload', function() {
+    endTime = new Date();
+    const timeSpent = Math.floor((endTime - startTime) / 1000);  // Time spent in seconds
+
+    // Send time spent data to the server using AJAX
+    $.ajax({
+        url: '{% url "record_time_spent" childID=childID eduMaterialID=eduMaterialID %}',
+        method: 'POST',
+        contentType: 'application/json',  // Set content type to JSON
+        data: JSON.stringify({
+            timeSpent: timeSpent,  // Send time spent in seconds
+            csrfmiddlewaretoken: '{{ csrf_token }}'  // Include CSRF token for POST requests
+        }),
+        success: function(response) {
+            console.log('Time spent recorded successfully.');
+        },
+        error: function(xhr, status, error) {
+            console.log('Failed to record time spent. Error:', error);
+            console.log('Status:', status);
+            console.log('Response:', xhr.responseText);
+        }
+    });
+});
+
 </script>
 </body>
 </html>
