@@ -1,34 +1,41 @@
+
+from django.utils import timezone
+from component.user.models import Child
+
 from django.db import models
 import uuid
-from django.utils import timezone
-
+from component.quiz.models import QuizType
 
 class Achievement(models.Model):
-    """
-    Achievement model stores the details of each achievement.
-    """
-    achievementID = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
-    thumbnail_url = models.URLField(null=True, blank=True)  # URL to store game logo
-    title = models.CharField(max_length=255)  # Achievement title
-    description = models.TextField()  # Description of the achievement
-    criteria = models.TextField()  # Criteria for completing the achievement
-    rewards = models.TextField()  # Rewards associated with the achievement
-    status = models.BooleanField(default=True)  # Whether the achievement is active or not
+    ACHIEVEMENT_TYPE_CHOICES = [
+        ('video', 'Video'),
+        ('book', 'Book'),
+        ('game', 'Game'),
+        ('quiz', 'Quiz'),
+    ]
 
-    def get_achievement_id(self):
-        return str(self.achievementID)
+    COMPLETION_METRIC_CHOICES = [
+        ('time_spent', 'Time Spent'),
+        ('score', 'Score'),
+        ('explore', 'Explore'),
+    ]
+
+    achievementID = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
+    thumbnail_url = models.URLField(null=True, blank=True)
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    type = models.CharField(max_length=50, choices=ACHIEVEMENT_TYPE_CHOICES, default='video')
+    completion_metric = models.CharField(max_length=50, choices=COMPLETION_METRIC_CHOICES, default='time_spent')
+    criteria = models.FloatField()
+    status = models.BooleanField(default=True)
+
+    quiz_type = models.ForeignKey(QuizType, on_delete=models.SET_NULL, null=True, blank=True,
+                                  related_name='achievements')
 
     def __str__(self):
-        return self.title  # Display the achievement title
+        return self.title
 
 
-class Child(models.Model):
-    """
-    A placeholder Child model, assuming this model is already defined elsewhere.
-    """
-    childID = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
-    name = models.CharField(max_length=100)
-    # Add other relevant fields here
 
 
 class ChildAchievement(models.Model):
@@ -40,25 +47,28 @@ class ChildAchievement(models.Model):
     completionPercentage = models.FloatField(default=0.0)  # Percentage of completion for the achievement
     complete = models.BooleanField(default=False)  # Whether the achievement is completed or not
     achievement = models.ForeignKey(Achievement, on_delete=models.CASCADE, related_name='child_achievements')
-    child = models.ForeignKey(Child, on_delete=models.CASCADE, related_name='child_achievements')
+    child = models.ForeignKey(Child, on_delete=models.CASCADE, related_name='child_achievements', to_field='childID')
 
     def get_child_achievement_id(self):
         return str(self.childAchievementID)
 
-    def mark_as_completed(self):
-        """
-        Marks the achievement as completed and sets the completion percentage to 100.
-        """
-        self.complete = True
-        self.completionPercentage = 100.0
-        self.save()
 
-    def calculate_completion_percentage(self, value):
+
+    def calculate_completion_percentage(self, completion_percentage):
         """
-        Calculates and updates the completion percentage based on a given value.
+        Updates the completion percentage and marks the achievement as complete if it reaches 100.
         """
-        self.completionPercentage = value
-        self.save()
+        self.completionPercentage = min(completion_percentage, 100)  # Ensure it doesn't exceed 100
+
+        # Mark as complete if the completion percentage is 100
+        if self.completionPercentage >= 100:
+            self.complete = True
+            self.dateEarned = timezone.now()
+        else:
+            self.complete = False  # Optionally reset to False if not complete
+
+        self.save()  # Save the updated achievement percentage
+        print("Child Achievement saved with completion percentage:", self.completionPercentage)
 
     def __str__(self):
         return f"{self.child.name} - {self.achievement.title} (Completed: {self.complete})"

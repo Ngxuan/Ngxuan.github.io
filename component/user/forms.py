@@ -4,14 +4,22 @@ from .models import Child
 import re
 
 
-
 class ParentRegistrationForm(forms.ModelForm):
-    password1 = forms.CharField(label='Password', widget=forms.PasswordInput)
-    password2 = forms.CharField(label='Confirm Password', widget=forms.PasswordInput)
+    password1 = forms.CharField(label='Password',
+                                widget=forms.PasswordInput(attrs={'placeholder': 'Enter your password'}))
+    password2 = forms.CharField(label='Confirm Password',
+                                widget=forms.PasswordInput(attrs={'placeholder': 'Confirm your password'}))
 
     class Meta:
         model = Parent
         fields = ['email', 'password1', 'password2', 'name', 'phoneNo']
+        widgets = {
+            'email': forms.EmailInput(attrs={'placeholder': 'Enter your email'}),
+            'name': forms.TextInput(attrs={'placeholder': 'Enter your full name'}),
+            'phoneNo': forms.TextInput(attrs={'placeholder': 'Enter your phone number'}),
+        }
+
+    # Other validations remain unchanged
 
     def clean_password2(self):
         password1 = self.cleaned_data.get("password1")

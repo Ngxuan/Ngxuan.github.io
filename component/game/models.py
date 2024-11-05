@@ -70,3 +70,5 @@ class ChildGame(models.Model):
 
     def __str__(self):
         return f"{self.child.name} - {self.game.title}"  # Display child name and game title
+
+

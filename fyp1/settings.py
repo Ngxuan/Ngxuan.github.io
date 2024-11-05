@@ -148,4 +148,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 PAYPAL_RECEIVER_EMAIL = 'sb-qq6lt33651428@business.example.com'
 PAYPAL_TEST = True
 
-
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # Or the SMTP server of your email provider
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'nglx-pm21@student.tarc.edu.my'  # Your email address
+EMAIL_HOST_PASSWORD = 'ktsz gunq qpnv wuiv'  # Your email password
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # Default sender email address
