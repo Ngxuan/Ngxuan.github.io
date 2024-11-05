@@ -82,7 +82,7 @@
     border: 1px solid #ddd;
     border-radius: 8px;
     margin: 20px;
-    padding: 10px;
+    padding:20px;
     background-color: #ffffff;
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s ease;
@@ -92,6 +92,7 @@
 .achievement-container {
     display: flex;
     align-items: center;
+    min-height:150px;
 }
 
 .achievement-badge {
@@ -120,9 +121,13 @@
     color: #666;
 }
 
+.completion-percentage{
+   margin: 5px 0 0;
+}
+
 /* Locked Achievements */
 .locked-achievement {
-    opacity: 0.5; /* Reduce opacity for locked achievements */
+    opacity: 0.2; /* Reduce opacity for locked achievements */
     background: #f0f0f0; /* Light gray background for locked achievements */
 }
 
@@ -361,7 +366,7 @@ const itemsPerPage = 6;  // Number of items to show per page
 
 // Function to fetch and filter content based on category and paginate
 function filterContent(category) {
-
+    currentCategory = category; // Update current category
     const cardContainer = document.getElementById('cardContainer');
     const childID = cardContainer.getAttribute('data-child-id');
     fetch(`/libraries/library/?category=${category}&childID=${childID}`, {  // Include childID in URL
@@ -398,39 +403,45 @@ function filterContent(category) {
 
             const card = document.createElement('div');
             // Apply the 'achievement-card' class only for achievement category
-            if (category === 'achievement') {
-                card.classList.add('achievement-card');
+        if (category === 'achievement') {
+            card.classList.add('achievement-card');
 
-                // Create the achievement card structure
-                const achievementContainer = document.createElement('div');
-                achievementContainer.classList.add('achievement-container');
+            // Create the achievement card structure
+            const achievementContainer = document.createElement('div');
+            achievementContainer.classList.add('achievement-container');
 
-                const badgeImage = document.createElement('img');
-                badgeImage.src = item.thumbnail_url || 'https://via.placeholder.com/100x100';
-                badgeImage.classList.add('achievement-badge');
+            const badgeImage = document.createElement('img');
+            badgeImage.src = item.thumbnail_url || 'https://via.placeholder.com/100x100';
+            badgeImage.classList.add('achievement-badge');
 
-                const detailsContainer = document.createElement('div');
-                detailsContainer.classList.add('achievement-details');
+            // Conditionally add locked-achievement class to the badge image
+            if (!item.completed) {
+                badgeImage.classList.add('locked-achievement');
+            }
 
-                const cardTitle = document.createElement('h5');
-                cardTitle.classList.add('achievement-title');
-                cardTitle.innerText = item.title;
+            const detailsContainer = document.createElement('div');
+            detailsContainer.classList.add('achievement-details');
 
-                const description = document.createElement('p');
-                description.classList.add('achievement-description');
-                description.innerText = item.description || 'No Description Available';
+            const cardTitle = document.createElement('h5');
+            cardTitle.classList.add('achievement-title');
+            cardTitle.innerText = item.title;
 
-                detailsContainer.appendChild(cardTitle);
-                detailsContainer.appendChild(description);
-                achievementContainer.appendChild(badgeImage);
-                achievementContainer.appendChild(detailsContainer);
-                card.appendChild(achievementContainer);
+            const description = document.createElement('p');
+            description.classList.add('achievement-description');
+            description.innerText = item.description || 'No Description Available';
 
-                if (!item.status) {
-                    card.classList.add('locked-achievement');
-                }
+            // Display completion percentage if available
+            const completionPercentage = document.createElement('p');
+            completionPercentage.classList.add('completion-percentage');
+            completionPercentage.innerText = `Completion: ${item.completionPercentage}%`;
 
-            } else {
+            detailsContainer.appendChild(cardTitle);
+            detailsContainer.appendChild(description);
+            detailsContainer.appendChild(completionPercentage); // Append completion percentage here
+            achievementContainer.appendChild(badgeImage);
+            achievementContainer.appendChild(detailsContainer);
+            card.appendChild(achievementContainer);
+             } else {
                 // For other categories, use the standard card structure
                 card.classList.add('card');
 
@@ -521,14 +532,143 @@ function updatePaginationControls(totalPages) {
 function handlePreviousPageClick() {
     if (currentPage > 1) {
         currentPage--;
-        filterContent(document.querySelector('.bubble.active').getAttribute('data-category'));
+        filterContent(currentCategory);
+    }
+}
+
+// Function to handle Next button click
+let currentCategory = 'all'; // Initialize current category variable
+
+function filterContent(category) {
+    currentCategory = category; // Update current category
+    const cardContainer = document.getElementById('cardContainer');
+    const childID = cardContainer.getAttribute('data-child-id');
+
+    fetch(`/libraries/library/?category=${category}&childID=${childID}`, {  // Include childID in URL
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        cardContainer.innerHTML = '';  // Clear the current content
+
+        if (!data.content || data.content.length === 0) {
+            console.log("No content found for this category.");
+            return;
+        }
+
+        const totalItems = data.content.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+        } else if (currentPage < 1) {
+            currentPage = 1;
+        }
+
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const paginatedContent = data.content.slice(startIndex, endIndex);
+
+        paginatedContent.forEach(item => {
+            const col = document.createElement('div');
+            col.classList.add('col-md-4', 'mb-1');
+            const card = document.createElement('div');
+
+            // Apply the 'achievement-card' class only for achievement category
+            if (category === 'achievement') {
+                card.classList.add('achievement-card');
+                const achievementContainer = document.createElement('div');
+                achievementContainer.classList.add('achievement-container');
+
+                const badgeImage = document.createElement('img');
+                badgeImage.src = item.thumbnail_url || 'https://via.placeholder.com/100x100';
+                badgeImage.classList.add('achievement-badge');
+                if (!item.completed) {
+                    badgeImage.classList.add('locked-achievement');
+                }
+
+                const detailsContainer = document.createElement('div');
+                detailsContainer.classList.add('achievement-details');
+                const cardTitle = document.createElement('h5');
+                cardTitle.classList.add('achievement-title');
+                cardTitle.innerText = item.title;
+
+                const description = document.createElement('p');
+                description.classList.add('achievement-description');
+                description.innerText = item.description || 'No Description Available';
+
+                const completionPercentage = document.createElement('p');
+                completionPercentage.classList.add('completion-percentage');
+                completionPercentage.innerText = `Completion: ${item.completionPercentage || 0}%`;
+
+                detailsContainer.appendChild(cardTitle);
+                detailsContainer.appendChild(description);
+                detailsContainer.appendChild(completionPercentage);
+                achievementContainer.appendChild(badgeImage);
+                achievementContainer.appendChild(detailsContainer);
+                card.appendChild(achievementContainer);
+            } else {
+                // Standard card structure for other categories
+                card.classList.add('card');
+                const link = document.createElement('a');
+                link.href = '#';
+                link.style.cursor = 'pointer';
+                link.addEventListener('click', () => {
+                    if (category === 'book') {
+                        openBookViewer(item.file_url, childID, item.eduMaterialID);
+                    } else if (category === 'video') {
+                        playVideoInFullScreen(item.file_url, childID, item.eduMaterialID);
+                    } else if (category === 'quiz') {
+                        openQuizPage(childID, item.quizID);
+                    } else if (category === 'game') {
+                        openGamePage(childID, item.gameID);
+                    }
+                });
+
+                const thumbnailUrl = item.thumbnail_url || 'https://via.placeholder.com/350x200';
+                const img = document.createElement('img');
+                img.src = thumbnailUrl;
+                img.classList.add('card-img-top');
+                img.alt = item.title;
+
+                link.appendChild(img);
+                card.appendChild(link);
+                const cardBody = document.createElement('div');
+                cardBody.classList.add('card-body');
+
+                const cardTitle = document.createElement('h5');
+                cardTitle.classList.add('card-title');
+                cardTitle.innerText = item.title || 'No Title Available';
+
+                cardBody.appendChild(cardTitle);
+                card.appendChild(cardBody);
+            }
+
+            col.appendChild(card);
+            cardContainer.appendChild(col);
+        });
+
+        updatePaginationControls(totalPages);
+    })
+    .catch(error => {
+        console.error("Error fetching data:", error);
+    });
+}
+
+// Function to handle Previous button click
+function handlePreviousPageClick() {
+    if (currentPage > 1) {
+        currentPage--;
+        filterContent(currentCategory); // Use the current category
     }
 }
 
 // Function to handle Next button click
 function handleNextPageClick() {
-    const category = document.querySelector('.bubble.active').getAttribute('data-category');
-    fetch(`/libraries/library/?category=${category}`, {
+    const childID = cardContainer.getAttribute('data-child-id');
+
+    // Fetch data again to determine the total items for pagination
+    fetch(`/libraries/library/?category=${currentCategory}&childID=${childID}`, {
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
     })
     .then(response => response.json())
@@ -538,13 +678,14 @@ function handleNextPageClick() {
 
         if (currentPage < totalPages) {
             currentPage++;
-            filterContent(category);
+            filterContent(currentCategory); // Use the current category
         }
     })
     .catch(error => {
         console.error("Error handling Next button click:", error);
     });
 }
+
 
 // Function to open the book viewer in a new page
 function openBookViewer(bookUrl, childID, eduMaterialID) {

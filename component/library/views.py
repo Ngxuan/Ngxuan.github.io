@@ -1,34 +1,27 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from component.eduMaterial.models import EducationalMaterial
-from component.quiz.models import Quiz
-from component.game.models import Game
-from component.user.models import Child
-from component.achievement.models import Achievement, ChildAchievement
-import uuid
 import logging
 import os
-import fitz  # PyMuPDF for PDF text extraction
-from django.http import JsonResponse, HttpResponse
-from django.views import View
-from resemble import Resemble
-from django.core.files.temp import NamedTemporaryFile
-
-# books/views.py
-import fitz  # PyMuPDF for PDF text extraction
 import requests
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from resemble import Resemble
 import json
-
+from django.shortcuts import render
+import uuid
+from component.user.models import Child
+from component.achievement.models import Achievement, ChildAchievement
+from component.eduMaterial.models import EducationalMaterial
+from component.quiz.models import Quiz
+from component.game.models import Game
+from django.db.models import OuterRef, Subquery, Case, When, Value, BooleanField,  FloatField
 
 
 def library(request):
     """Render the library page and handle filtering based on categories."""
-    category = request.GET.get('category', 'all')  # Get category from query parameters, default to 'all'
-    child_id = request.GET.get('childID', None)  # Get the child ID from query parameters
-    print("Retrieved Child ID from query parameters:", child_id)  # Debugging line
+    category = request.GET.get('category', 'all')  # Default to 'all' if no category specified
+    child_id = request.GET.get('childID')  # Retrieve child ID if available
+    print("Retrieved Child ID:", child_id)  # Debugging line
 
     try:
         child_id = uuid.UUID(child_id) if child_id else None
@@ -37,76 +30,93 @@ def library(request):
 
     filtered_content = []
 
-    # Filter content based on the selected category
+    # Determine content based on category
     if category == 'book':
         filtered_content = EducationalMaterial.objects.filter(type='book')
     elif category == 'video':
         filtered_content = EducationalMaterial.objects.filter(type='video')
     elif category == 'quiz':
-        # Retrieve quizzes from the Quiz model instead of EducationalMaterial
         filtered_content = Quiz.objects.all()
     elif category == 'game':
-        if child_id:
-            print("Child ID:", child_id)  # Debugging: check the child_id
-
-            # Retrieve the child using childID
-            child = Child.objects.filter(childID=child_id).first()
-            print("Fetched Child:", child)  # Debugging: check if child was fetched
-
-            # Ensure the child exists and has an associated parent
-            if child and child.parent:
-                parent = child.parent  # Get the parent from the child
-                print("Parent Name:", parent.name)  # Debugging: print parent's name
-
-                # Check if the parent has an active subscription
-                subscription = getattr(parent, 'subscription', None)  # Safely get subscription if it exists
-                has_active_subscription = subscription.is_active() if subscription else False
-
-                if has_active_subscription:
-                    # Parent has an active subscription, child can access all active games
-                    filtered_content = Game.objects.filter(status=True)
-                else:
-                    # Parent does not have an active subscription, child can access only free and active games
-                    filtered_content = Game.objects.filter(status=True, free=True)
-            else:
-                print("Child not found or no parent associated.")  # Debugging message if child not linked correctly
-                filtered_content = Game.objects.filter(status=True, free=True)
-        else:
-            print("No child_id provided.")  # Debugging: if child_id is not provided
-            filtered_content = Game.objects.filter(status=True, free=True)
-
+        filtered_content = fetch_games(child_id)
     elif category == 'achievement':
-        # Retrieve achievements based on the child ID, if provided
-        if child_id:
-            child = Child.objects.filter(childID=child_id).first()
-            if child:
-                # Retrieve ChildAchievement instances and their related Achievement data
-                filtered_content = ChildAchievement.objects.filter(child=child).select_related('achievement')
-            else:
-                # If no child is found, show all available achievements
-                filtered_content = Achievement.objects.all()
-        else:
-            # If no child ID is provided, show all available achievements
-            filtered_content = Achievement.objects.all()
-    else:
-        # If no category matches, default to all items in the EducationalMaterial model
-        filtered_content = EducationalMaterial.objects.all()
+        filtered_content = fetch_achievements(child_id)
 
-    # Check if the request is an AJAX request
+    # Check if request is AJAX
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        if category == 'quiz':
-            content_list = list(filtered_content.values('quizID', 'title', 'thumbnail_url'))
-        elif category == 'game':
-            content_list = list(filtered_content.values('gameID', 'title', 'thumbnail_url'))
-        elif category == 'achievement':
-            # Format the achievements data for AJAX response
-            content_list = list(filtered_content.values('achievementID', 'title', 'description', 'thumbnail_url'))
-        else:
-            content_list = list(filtered_content.values('eduMaterialID', 'title', 'file_url', 'thumbnail_url', 'type'))
-
+        content_list = generate_content_list(category, filtered_content)
         return JsonResponse({'content': content_list}, safe=False)
 
+    # Render template for non-AJAX requests
     return render(request, 'childHome.html', {'materials': filtered_content, 'selected_category': category})
+
+def fetch_games(child_id):
+    """Fetch games based on child ID and subscription status."""
+    if child_id:
+        child = Child.objects.filter(childID=child_id).first()
+        print("Fetched Child:", child)  # Debugging line
+        if child and child.parent:
+            parent = child.parent
+            print("Parent Name:", parent.name)  # Debugging line
+            has_active_subscription = getattr(parent, 'subscription', None) and parent.subscription.is_active()
+            return Game.objects.filter(status=True) if has_active_subscription else Game.objects.filter(status=True, free=True)
+    print("No valid child or parent subscription. Access limited to free games.")
+    return Game.objects.filter(status=True, free=True)
+
+
+def fetch_achievements(child_id):
+    """Fetch achievements with child's completion status and calculate completion percentage if child_id is provided."""
+    achievements = Achievement.objects.all()
+
+    if child_id:
+        child = Child.objects.filter(childID=child_id).first()
+
+        if child:
+            # Filter achievements that exist in ChildAchievement for the given child
+            child_achievement_qs = ChildAchievement.objects.filter(
+                child=child,
+                achievement=OuterRef('pk')  # OuterRef to match Achievement ID with ChildAchievement's achievement field
+            )
+
+            # Annotate achievements with 'completed' status based on whether the child has completed it
+            achievements = achievements.annotate(
+                completed=Case(
+                    When(
+                        pk__in=Subquery(child_achievement_qs.filter(complete=True).values('achievement')),
+                        then=Value(True)
+                    ),
+                    default=Value(False),
+                    output_field=BooleanField(),
+                ),
+                completionPercentage=Subquery(child_achievement_qs.values('completionPercentage')[:1])  # Get the first completionPercentage from ChildAchievement
+            )
+
+
+    return achievements
+
+
+def generate_content_list(category, filtered_content):
+    """Generate content list based on category for AJAX requests."""
+    if category == 'quiz':
+        return list(filtered_content.values('quizID', 'title', 'thumbnail_url'))
+    elif category == 'game':
+        return list(filtered_content.values('gameID', 'title', 'thumbnail_url'))
+    elif category == 'achievement':
+        # Retrieve the list of achievements with additional information if available
+        if isinstance(filtered_content.first(), Achievement):
+            return list(
+                filtered_content.values(
+                    'achievementID',          # Achievement ID
+                    'title',                  # Achievement title
+                    'description',            # Achievement description
+                    'thumbnail_url',          # Achievement thumbnail URL
+                    'completed',              # Child's completion status (True/False)
+                    'completionPercentage'    # Completion percentage for achievements
+                )
+            )
+    # Default handling for other content types
+    return list(filtered_content.values('eduMaterialID', 'title', 'file_url', 'thumbnail_url', 'type'))
+
 
 
 logger = logging.getLogger(__name__)

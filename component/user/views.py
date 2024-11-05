@@ -16,6 +16,8 @@ from datetime import timedelta
 from component.user.models import Parent, Child, Subscription, SubscriptionPlan
 from django.contrib.auth import logout
 from django.utils import timezone
+from django.urls import reverse_lazy
+from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
 
 
 
@@ -271,7 +273,37 @@ def subscription_plans_view(request):
     return render(request, 'subscription.html', context)
 
 
+
 def logout_view(request):
     logout(request)
     return redirect('signin')
 
+
+
+
+class ForgotPasswordView(PasswordResetView):
+    template_name = 'forgotPassword.html'  # The form template
+    html_email_template_name = 'password_reset_email.html'   # HTML email content template
+    subject_template_name = 'passwordResetEmail.txt'  # Subject template for the email
+    success_url = reverse_lazy('forgot_password')  # Redirect to the same page after submission
+
+    def form_valid(self, form):
+        # Display a success message in the template after submission
+        messages.success(self.request, "An email has been sent with instructions to reset your password. Please check your inbox.")
+        return super().form_valid(form)
+
+# Custom Password Reset Confirm View
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = 'password_reset_confirm.html'
+    success_url = reverse_lazy('password_reset_complete')  # Redirect to success page
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        self.request.session['password_reset_success'] = True  # Flag for success message
+        return response
+
+    def get(self, request, *args, **kwargs):
+        # Clear the success flag after displaying it
+        if 'password_reset_success' in request.session:
+            del request.session['password_reset_success']
+        return super().get(request, *args, **kwargs)

@@ -108,7 +108,7 @@
                         <div class="form-group mb-3 text-start">
                             <label for="password">Password <span class="text-danger">*</span></label>
                             <input type="password" name="password" id="password" class="form-control" placeholder="Enter your password" required>
-                            <a href="#" class="forgot-password">Forgot password?</a>
+                            <a href="{% url 'forgot_password' %}" class="forgot-password">Forgot password?</a>
                         </div>
                         <button type="submit" class="btn btn-dark mt-3"><b>Login</b></button>
                     </form>
