@@ -11,11 +11,16 @@ urlpatterns = [
     path('addChild/', views.add_child_account, name='add_child_account'),
     path('child/<uuid:childID>/', views.child_home, name='child_home'),
     path('dashboard/', views.parent_dashboard, name='parent_dashboard'),
+    path('parentDetail/', views.parent_detail, name='parentDetail'),
+    path('change-password/', views.change_password, name='change_password'),
     path('childDetail/<uuid:child_id>/', views.child_detail, name='child_detail'),
     path('subscription-plans/', views.subscription_plans_view, name='subscription_plans'),
     path('logout/', views.logout_view, name='logout'),
     path('forgot-password/', views.ForgotPasswordView.as_view(), name='forgot_password'),
     path('payment/', include(('component.payment.urls', 'payment'), namespace='payment')),
+    # urls.py
+    path('update_child/<uuid:child_id>/', views.update_child_profile, name='update_child_profile'),
+path('parent_dashboard_auth/', views.parent_dashboard_auth, name='parent_dashboard_auth'),
 
     path('forgot-password/', views.ForgotPasswordView.as_view(), name='forgot_password'),
     # Use the custom password reset confirm view

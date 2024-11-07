@@ -14,7 +14,7 @@ from component.achievement.models import Achievement, ChildAchievement
 from component.eduMaterial.models import EducationalMaterial
 from component.quiz.models import Quiz
 from component.game.models import Game
-from django.db.models import OuterRef, Subquery, Case, When, Value, BooleanField,  FloatField
+from django.db.models import OuterRef, Subquery, Case, When, Value, BooleanField,  F
 
 
 def library(request):
@@ -65,20 +65,19 @@ def fetch_games(child_id):
 
 
 def fetch_achievements(child_id):
-    """Fetch achievements with child's completion status and calculate completion percentage if child_id is provided."""
+    """Fetch achievements with child's completion status and include formatted criteria if time spent is the metric."""
     achievements = Achievement.objects.all()
 
     if child_id:
         child = Child.objects.filter(childID=child_id).first()
 
         if child:
-            # Filter achievements that exist in ChildAchievement for the given child
+            # Query to get relevant ChildAchievement data for progress value
             child_achievement_qs = ChildAchievement.objects.filter(
                 child=child,
-                achievement=OuterRef('pk')  # OuterRef to match Achievement ID with ChildAchievement's achievement field
+                achievement=OuterRef('pk')
             )
 
-            # Annotate achievements with 'completed' status based on whether the child has completed it
             achievements = achievements.annotate(
                 completed=Case(
                     When(
@@ -88,35 +87,53 @@ def fetch_achievements(child_id):
                     default=Value(False),
                     output_field=BooleanField(),
                 ),
-                completionPercentage=Subquery(child_achievement_qs.values('completionPercentage')[:1])  # Get the first completionPercentage from ChildAchievement
+                currentValue=Subquery(child_achievement_qs.values('progress_value')[:1]),
+                targetValue=F('criteria')
             )
 
 
     return achievements
 
+def format_time(seconds):
+    """Convert seconds to a string in 'X hours Y minutes' format."""
+    total_minutes = int(seconds / 60)  # Convert seconds to minutes
+    hours_part = total_minutes // 60
+    minutes_part = total_minutes % 60
+    return f"{hours_part} hrs {minutes_part} mins" if hours_part > 0 else f"{minutes_part} mins"
+
 
 def generate_content_list(category, filtered_content):
     """Generate content list based on category for AJAX requests."""
+    content_list = []
+
     if category == 'quiz':
         return list(filtered_content.values('quizID', 'title', 'thumbnail_url'))
     elif category == 'game':
         return list(filtered_content.values('gameID', 'title', 'thumbnail_url'))
     elif category == 'achievement':
-        # Retrieve the list of achievements with additional information if available
         if isinstance(filtered_content.first(), Achievement):
-            return list(
-                filtered_content.values(
-                    'achievementID',          # Achievement ID
-                    'title',                  # Achievement title
-                    'description',            # Achievement description
-                    'thumbnail_url',          # Achievement thumbnail URL
-                    'completed',              # Child's completion status (True/False)
-                    'completionPercentage'    # Completion percentage for achievements
-                )
-            )
-    # Default handling for other content types
-    return list(filtered_content.values('eduMaterialID', 'title', 'file_url', 'thumbnail_url', 'type'))
+            for achievement in filtered_content:
+                item = {
+                    'achievementID': achievement.achievementID,
+                    'title': achievement.title,
+                    'description': achievement.description,
+                    'thumbnail_url': achievement.thumbnail_url,
+                    'completed': achievement.completed,
+                    'currentValue': achievement.currentValue,
+                    'targetValue': achievement.targetValue,
+                    'completionMetric' : achievement.completion_metric
+                }
+                # Conditionally format criteria for time_spent metric
+                if achievement.completion_metric == 'time_spent':
+                    item['formattedCriteria'] = format_time(achievement.criteria)
+                else:
+                    item['formattedCriteria'] = str(achievement.criteria)
 
+                content_list.append(item)
+    else:
+        return list(filtered_content.values('eduMaterialID', 'title', 'file_url', 'thumbnail_url', 'type'))
+
+    return content_list
 
 
 logger = logging.getLogger(__name__)

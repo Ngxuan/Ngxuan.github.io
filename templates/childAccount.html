@@ -118,6 +118,22 @@
         .add-child-btn:hover {
             transform: scale(1.05);
         }
+
+        .save-button {
+            width: 100%;
+            padding: 12px;
+            background-color: #000;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            margin-top: 5%;
+        }
+
+        .save-button:hover {
+            background-color: #333;
+        }
     </style>
 </head>
 <body>
@@ -134,7 +150,8 @@
                         <div class="profile">
                             <a href="{% url 'child_home' child.childID %}">
                                 {% if child.image %}
-                                    <img src="{{ child.image.url }}" alt="{{ child.name }}">
+                                   <img src="{% if child.image %}{{ child.image }}{% else %}{% static 'image/childProfile.png' %}{% endif %}" alt="{{ child.name }}" class="profile-image">
+
                                 {% else %}
                                     <img src="{% static 'image/childProfile.png' %}" alt="Default Image">
                                 {% endif %}
@@ -151,15 +168,58 @@
             {% endif %}
         </div>
 
-        <div class="footer">
-            <a href="{% url 'parent_dashboard' %}" >
-                <span class="lock-icon">🔒</span> Parent Dashboard
-            </a>
+    <div class="footer">
+        <a href="#" data-bs-toggle="modal" data-bs-target="#passwordModal">
+            <span class="lock-icon">🔒</span> Parent Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Password Modal -->
+<div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{% url 'parent_dashboard_auth' %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="passwordModalLabel">Enter Parent Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Error message display area -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-danger" role="alert">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="form-group">
+                        <label for="parent_password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="parent_password" name="parent_password" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+
+                    <button type="submit" class="save-button">Submit</button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const errorMessage = document.querySelector(".alert-danger");
+        if (errorMessage) {
+            // Re-open the modal if there's an error message
+            const passwordModal = new bootstrap.Modal(document.getElementById('passwordModal'));
+            passwordModal.show();
+        }
+    });
+</script>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

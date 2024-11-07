@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Child Progress</title>
     {% load static %}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+   <link  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"        >
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
     <style>
         /* Body Styling */
         body, html {
@@ -19,16 +21,14 @@
             background: #FFFAE3;
             font-family: Arial, sans-serif;
             display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            flex-direction: column;
+            flex-direction: column; /* Ensure a vertical stacking */
         }
 
         /* Header Styling */
         .header {
             width: 100%;
             background-color: #FFF;
-            padding: 20px 30px;
+            padding: 10px 20px; /* Adjusted padding for better appearance */
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             display: flex;
             align-items: center;
@@ -36,7 +36,7 @@
             top: 0;
             left: 0;
             z-index: 10;
-            height: 40px; /* Fixed height */
+            height: 60px; /* Increased height to accommodate padding */
         }
 
         .back-button {
@@ -45,24 +45,25 @@
             text-decoration: none;
             display: flex;
             align-items: center;
-            margin-left: 10px;
+
             cursor: pointer;
         }
 
         .header h1 {
             flex-grow: 1;
-            font-size: 28px;
+            font-size: 24px; /* Reduced font size for consistency */
             font-weight: bold;
             text-align: center;
             color: #333;
             margin: 0;
+
         }
 
         /* Container Styling */
         .container {
             width: 90%;
             max-width: 1200px;
-            margin: 200px auto 20px; /* Margin-top to account for fixed header height */
+            margin: 120px auto 20px; /* Adjusted margin-top to sit below the fixed header */
         }
 
         .section {
@@ -81,26 +82,49 @@
         }
 
         /* Profile Section Styling */
-        .profile-section {
-            display: flex;
-            align-items: center;
-            padding: 20px;
-            border-radius: 10px;
-        }
+.profilesection{
+background: #FFF;
+    padding: 20px 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+    position: relative; /* Positioning context for the edit icon */
+    }
 
-        .profile-image {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-right: 20px;
-            padding: 5px;
-        }
+.edit-icon {
+    position: absolute;
+    top: 20px; /* Align with the heading */
+    right: 30px; /* Position near the right edge */
+    font-size: 20px;
+    color: #333;
+    text-decoration: none;
+    cursor: pointer;
+}
 
-        .profile-details {
-            font-size: 18px;
-            line-height: 1.5;
-        }
+.edit-icon:hover {
+    color: #007BFF; /* Optional: Change color on hover */
+}
+
+.profile-section {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.profile-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 20px;
+}
+
+.profile-details {
+    font-size: 18px;
+    line-height: 1.5;
+}
+
 
         /* Time Report Section */
         .time-report, .quiz-report {
@@ -139,6 +163,175 @@
             cursor: pointer;
             margin: 0 10px;
         }
+
+ .quizsection {
+    background: #FFF;
+    padding: 40px 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 70px;
+}
+
+.quizsection h2 {
+    margin-top: 0;
+    text-align: center;
+    font-size: 24px;
+    color: #333;
+}
+
+.filter-container {
+    margin-bottom: 40px;
+}
+
+/* Center the entire quiz-results section */
+.quiz-results-wrapper {
+    display: flex;
+    justify-content: center;
+
+    margin-left:5%;
+ }
+
+.quiz-results {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start; /* Keep items left-aligned */
+    width: 100%; /* Take up full width of wrapper */
+    gap: 20px;
+    max-width: 1000px; /* Limit maximum width for better centering */
+}
+
+.quiz-card {
+    background: #f9f9f9;
+    border-radius: 8px;
+    padding: 15px;
+    width: calc(35% ); /* 3 cards per row, with spacing */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin: 10px 40px;
+}
+
+/* Media queries for responsiveness */
+@media (max-width: 768px) {
+    .quiz-card {
+        width: calc(50% - 20px); /* 2 cards per row on medium screens */
+    }
+}
+
+@media (max-width: 480px) {
+    .quiz-card {
+        width: 100%; /* Full width for small screens */
+    }
+}
+
+h3 {
+    font-size: 1.5em;
+    margin-bottom: 10px;
+}
+
+.progress-bar {
+    background: #e0e0e0;
+    border-radius: 5px;
+    height: 20px;
+    position: relative;
+    margin: 10px 0;
+}
+
+.progress {
+    background: #FF69B4;
+    border-radius: 5px;
+    height: 100%;
+    text-align: center;
+    color: white;
+    font-weight: bold;
+    line-height: 20px;
+}
+
+.score-strength {
+    display: block;
+    margin-top: 5px;
+    color: #555;
+}
+
+
+        /* Modal background */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 100; /* Ensure it appears above other content */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+}
+
+/* Modal content box */
+.modal-content {
+    background-color: #FFF;
+    margin: 10% auto; /* Adjust margin-top to move the form higher */
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 500px; /* Limit width */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.preview-image {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    margin: 10px auto;
+}
+
+/* Close button */
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 50px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #000;
+}
+
+.modal-content h2 {
+    text-align: center;
+}
+
+.modal-content form label {
+    display: block;
+    margin: 10px 0 5px;
+}
+
+.modal-content form input {
+    width: calc(100% - 20px); /* Adjust width to account for margin */
+    padding: 8px;
+    margin-bottom: 15px;
+    margin-right: 10px; /* Add margin-right */
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+
+.save-button {
+            width: 100%;
+            padding: 10px;
+            background-color: #000;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+}
+
+.save-button:hover {
+background-color: #333;
+}
+
+
     </style>
 </head>
 <body>
@@ -154,27 +347,47 @@
     <!-- Main Container -->
     <div class="container">
         <!-- Profile Section -->
-        <div class="section">
-            <h2 style="text-align: left;">Profile</h2>
-            <div class="profile-section">
-                <img class="profile-image" src="{% if child.image %}{{ child.image.url }}{% else %}{% static 'image/childProfile.png' %}{% endif %}" alt="{{ child.name }}">
-                <div class="profile-details">
-                    <p>Name: <strong>{{ child.name }}</strong></p>
-                    <p>Age: <strong>{{ child.age }} years old</strong></p>
-                </div>
-            </div>
+<div class="profilesection">
+    <h2 style="text-align: left; display: inline-block;">Profile</h2>
+    <!-- Pencil Icon for Editing near the heading -->
+    <a href="javascript:void(0);" class="edit-icon" onclick="openModal()">
+        <i class="fas fa-pen"></i>
+    </a>
+    <div class="profile-section">
+        <img class="profile-image" src="{% if child.image %}{{ child.image }}{% else %}{% static 'image/childProfile.png' %}{% endif %}" alt="{{ child.name }}">
+        <div class="profile-details">
+            <p>Name: <strong>{{ child.name }}</strong></p>
+            <p>Age: <strong>{{ child.age }} years old</strong></p>
         </div>
+    </div>
+</div>
 
+<!-- Edit Child Info Modal -->
+
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2>Edit Child Info</h2>
+        <form id="editForm" action="{% url 'update_child_profile' child.childID %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label for="profileImage">Profile Image:</label>
+            <img id="profileImagePreview" src="{% if child.image %}{{ child.image }}{% else %}{% static 'image/childProfile.png' %}{% endif %}" alt="Profile Image" class="preview-image">
+            <input type="file" id="profileImage" name="image" accept="image/*" onchange="previewImage(event)">
+
+            <label for="childName">Name:</label>
+            <input type="text" id="childName" name="name" value="{{ child.name }}" required>
+
+            <label for="childAge">Age:</label>
+            <input type="number" id="childAge" name="age" value="{{ child.age }}" required>
+
+            <button type="submit" class="save-button">Save</button>
+        </form>
+    </div>
+</div>
 
         <!-- Time Spent Report Section -->
         <div class="section">
-            <h2>Time Spent Report of {{ child.name }}
-                <select class="time-period">
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                </select>
-            </h2>
+            <h2>Time Spent Report of {{ child.name }}</h2>
             <div class="time-report">
                 <div class="report-item">
                     <canvas id="bookChart"></canvas>
@@ -193,113 +406,208 @@
                     <p>Game</p>
                 </div>
             </div>
-            <p>Total Time Spent: <strong>{{ total_time_spent }} min</strong></p>
+            <p>Total Time Spent: <strong>0 hr 0 min</strong></p>
         </div>
 
         <!-- Quiz Score Report Section -->
-        <div class="section">
-            <h2>Quiz Score of {{ child.name }}</h2>
-            <div class="quiz-report">
-                {% for quiz in quiz_scores %}
-                    <div class="report-item">
-                        <canvas id="quizChart{{ forloop.counter }}" class="quiz-chart"></canvas>
-                        <p>{{ quiz.title }}</p>
-                    </div>
-                {% endfor %}
+
+   <!-- Quiz Score Report Section -->
+<div class="quizsection">
+    <h2>Quiz Score of {{ child.name }}</h2>
+            <div class="filter-container">
+                <label for="quiz-type-filter">Filter by Quiz Type:</label>
+                <select id="quiz-type-filter" class="filter-select" onchange="filterQuizzes()">
+                    <option value="all">All</option>
+                    {% for quiz_type in quiz_types %}
+                        <option value="{{ quiz_type.type_name }}">{{ quiz_type.type_name }}</option>
+                    {% endfor %}
+                </select>
             </div>
+    <div class="quiz-results-wrapper">
+        <div class="quiz-results">
+            {% for quiz in quiz_scores %}
+            <div class="quiz-card" data-type="{{ quiz.quiz__type__type_name }}">
+                <h3>{{ quiz.quiz__title }}</h3>
+                <p>{{ quiz.quiz__description }}</p>
+                <div class="progress-bar">
+                    <div class="progress" style="width: {{ quiz.score }}%;">{{ quiz.score }}</div>
+                </div>
+                <span class="score-strength">
+                    {% if quiz.score < 40 %}
+                        Low to Average Strength
+                    {% elif quiz.score < 70 %}
+                        Average Strength
+                    {% else %}
+                        Average to High Strength
+                    {% endif %}
+                </span>
+            </div>
+            {% endfor %}
         </div>
     </div>
 
-    <!-- Include Font Awesome for icons and Chart.js for charts -->
+
+
+</div>
+    </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-
     <script>
-        // Data for each category
-        const data = {
-            book: { time: 1, color: '#98FB98' },  // Light green color
-            video: { time: 0, color: '#87CEEB' }, // Light blue color
-            quiz: { time: 13, color: '#FF69B4' }, // Pink color
-            game: { time: 0, color: '#D3D3D3' }   // Light gray color
-        };
 
-        // Function to create a donut chart
-        function createDonutChart(ctx, data) {
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Time Spent', 'Remaining'],
-                    datasets: [{
-                        data: [data.time, data.time === 0 ? 1 : 15 - data.time],
-                        backgroundColor: [data.color, '#E0E0E0'],
-                        hoverBackgroundColor: [data.color, '#E0E0E0'],
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    cutout: '70%',
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { enabled: false }
-                    }
+      function filterQuizzes() {
+            // Get selected quiz type
+            const selectedType = document.getElementById('quiz-type-filter').value;
+            // Get all quiz cards
+            const quizCards = document.querySelectorAll('.quiz-card');
+
+            quizCards.forEach(card => {
+                const quizType = card.getAttribute('data-type');
+                if (selectedType === 'all' || quizType === selectedType) {
+                    card.style.display = 'block'; // Show card if matches filter
+                } else {
+                    card.style.display = 'none'; // Hide card if doesn't match filter
                 }
             });
         }
 
-        // Create each donut chart for time spent
-        createDonutChart(document.getElementById('bookChart').getContext('2d'), data.book);
-        createDonutChart(document.getElementById('videoChart').getContext('2d'), data.video);
-        createDonutChart(document.getElementById('quizChart').getContext('2d'), data.quiz);
-        createDonutChart(document.getElementById('gameChart').getContext('2d'), data.game);
+ // Data for each category (populated from Django)
+const timeSpentData = {
+    book: { time: {{ book_time }}, color: '#98FB98' },
+    video: { time: {{ video_time }}, color: '#87CEEB' },
+    quiz: { time: {{ quiz_time }}, color: '#FF69B4' },
+    game: { time: {{ game_time }}, color: '#D3D3D3' }
+};
 
-        // Function to create donut charts for quiz scores
-        function createQuizScoreChart(ctx, score) {
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Score', 'Remaining'],
-                    datasets: [{
-                        data: [score, 100 - score],
-                        backgroundColor: ['#FF69B4', '#E0E0E0'],
-                        hoverBackgroundColor: ['#FF69B4', '#E0E0E0'],
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    cutout: '75%',  // Increase cutout percentage to create a larger hole
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { enabled: false },
-                        datalabels: {
-                            display: true,
-                            align: 'center',
-                            anchor: 'center',
-                            color: '#000',
-                            font: {
-                                size: 20,
-                                weight: 'bold'
-                            },
-                            formatter: function(value, context) {
-                                if (context.dataIndex === 0) {
-                                    return `${score}/100`;
-                                }
-                                return '';
-                            }
-                        }
-                    }
-                },
-                plugins: [ChartDataLabels]
-            });
+// Function to format time into a user-friendly format (like "13m" or "< 1m")
+function formatTime(minutes) {
+    if (minutes < 1) {
+        return "< 1m";
+    }
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.floor(minutes % 60);
+    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+}
+
+function createDonutChart(ctx, data) {
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Time Spent', 'Remaining'],
+            datasets: [{
+                data: [data.time, Math.max(1, 15 - data.time)],
+                backgroundColor: [data.color, '#E0E0E0'],
+                hoverBackgroundColor: [data.color, '#E0E0E0'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            cutout: '75%',  // Increase cutout size for a larger hole
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false }
+            }
+        },
+        plugins: [{
+            id: 'centerText',
+            afterDraw(chart) {
+                const { ctx, chartArea: { left, right, top, bottom } } = chart;
+                const xCenter = (left + right) / 2;
+                const yCenter = (top + bottom) / 2;
+
+                ctx.save();
+                ctx.font = 'bold 18px Arial';
+                ctx.fillStyle = '#000';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                // Format time display
+                const timeText = formatTime(data.time);
+
+                // Draw the time text in the center of the hole
+                ctx.fillText(timeText, xCenter, yCenter);
+                ctx.restore();
+            }
+        }]
+    });
+}
+
+// Create each donut chart for time spent
+createDonutChart(document.getElementById('bookChart').getContext('2d'), timeSpentData.book);
+createDonutChart(document.getElementById('videoChart').getContext('2d'), timeSpentData.video);
+createDonutChart(document.getElementById('quizChart').getContext('2d'), timeSpentData.quiz);
+createDonutChart(document.getElementById('gameChart').getContext('2d'), timeSpentData.game);
+
+// Get the modal, button, and close elements
+const modal = document.getElementById("editModal");
+const editIcon = document.querySelector(".edit-icon");
+const closeModalBtn = document.querySelector(".close");
+
+// Function to close the modal
+function closeModal() {
+    modal.style.display = "none";
+}
+
+// Show the modal when the edit icon is clicked
+editIcon.addEventListener("click", function(event) {
+    event.preventDefault();
+    modal.style.display = "block";
+});
+
+// Hide the modal when the close button is clicked
+closeModalBtn.addEventListener("click", closeModal);
+
+// Hide the modal when clicking outside of it
+window.addEventListener("click", function(event) {
+    if (event.target === modal) {
+        closeModal();
+    }
+});
+
+// Preview the selected image
+function previewImage(event) {
+    const reader = new FileReader();
+    reader.onload = function() {
+        const preview = document.getElementById("profileImagePreview");
+        preview.src = reader.result; // Set the preview image source
+    };
+    reader.readAsDataURL(event.target.files[0]); // Read the selected file
+}
+
+// Form submission handling
+document.getElementById('editForm').addEventListener('submit', function(event) {
+    event.preventDefault();  // Prevent the form from submitting normally
+
+    const formData = new FormData(this);  // Create a FormData object to handle file uploads
+    const childId = "{{ child.childID }}";  // Get the UUID of the child
+
+    fetch(`/user/update_child/${childId}/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',  // Optional: Tell Django it's an AJAX request
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value  // CSRF token for security
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);  // Display success message
+            closeModal();  // Close the modal
+
+            // Delay the page reload to ensure the modal closes first
+            setTimeout(() => {
+                location.reload();  // Refresh the page to show updated data
+            }, 500);  // 500 milliseconds delay
+        } else {
+            alert('Error updating profile: ' + JSON.stringify(data.errors));
         }
+    })
+    .catch(error => console.error('Error:', error));
+});
 
-        // Create each quiz chart using the data from the Django context
-        {% for quiz in quiz_scores %}
-            const ctx{{ forloop.counter }} = document.getElementById('quizChart{{ forloop.counter }}').getContext('2d');
-            createQuizScoreChart(ctx{{ forloop.counter }}, {{ quiz.score }});
-        {% endfor %}
+
     </script>
 </body>
 </html>

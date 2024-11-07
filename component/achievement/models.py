@@ -4,7 +4,7 @@ from component.user.models import Child
 
 from django.db import models
 import uuid
-from component.quiz.models import QuizType
+from component.quiz.models import Quiz
 
 class Achievement(models.Model):
     ACHIEVEMENT_TYPE_CHOICES = [
@@ -29,8 +29,7 @@ class Achievement(models.Model):
     criteria = models.FloatField()
     status = models.BooleanField(default=True)
 
-    quiz_type = models.ForeignKey(QuizType, on_delete=models.SET_NULL, null=True, blank=True,
-                                  related_name='achievements')
+    quiz_title = models.ForeignKey(Quiz, on_delete=models.SET_NULL, null=True, blank=True, related_name='achievements')
 
     def __str__(self):
         return self.title
@@ -44,7 +43,7 @@ class ChildAchievement(models.Model):
     """
     childAchievementID = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
     dateEarned = models.DateTimeField(default=timezone.now)  # Date the achievement was earned
-    completionPercentage = models.FloatField(default=0.0)  # Percentage of completion for the achievement
+    progress_value = models.FloatField(default=0.0)
     complete = models.BooleanField(default=False)  # Whether the achievement is completed or not
     achievement = models.ForeignKey(Achievement, on_delete=models.CASCADE, related_name='child_achievements')
     child = models.ForeignKey(Child, on_delete=models.CASCADE, related_name='child_achievements', to_field='childID')
@@ -52,23 +51,28 @@ class ChildAchievement(models.Model):
     def get_child_achievement_id(self):
         return str(self.childAchievementID)
 
-
-
-    def calculate_completion_percentage(self, completion_percentage):
+    def calculate_completion(self):
         """
-        Updates the completion percentage and marks the achievement as complete if it reaches 100.
+        Calculates the completion percentage based on progress_value and marks the achievement as complete if it reaches 100%.
         """
-        self.completionPercentage = min(completion_percentage, 100)  # Ensure it doesn't exceed 100
-
-        # Mark as complete if the completion percentage is 100
-        if self.completionPercentage >= 100:
-            self.complete = True
-            self.dateEarned = timezone.now()
+        # Calculate completion percentage dynamically
+        if self.achievement.criteria > 0:
+            completion_percentage = (self.progress_value / self.achievement.criteria) * 100
         else:
-            self.complete = False  # Optionally reset to False if not complete
+            completion_percentage = 0
 
-        self.save()  # Save the updated achievement percentage
-        print("Child Achievement saved with completion percentage:", self.completionPercentage)
+        # Ensure the completion percentage does not exceed 100
+        completion_percentage = min(completion_percentage, 100)
+
+        # Update the `complete` status based on the completion percentage
+        if completion_percentage >= 100:
+            self.complete = True
+            self.dateEarned = timezone.now()  # Set the date when marked complete
+        else:
+            self.complete = False
+
+        self.save()  # Save the updated achievement
+        print("Child Achievement saved with calculated completion percentage:", completion_percentage)
 
     def __str__(self):
         return f"{self.child.name} - {self.achievement.title} (Completed: {self.complete})"

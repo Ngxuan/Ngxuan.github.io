@@ -27,17 +27,17 @@ class ParentManager(BaseUserManager):
 
 class Parent(AbstractBaseUser):
     parentID = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    image = models.ImageField(upload_to='parent_images/', blank=True, null=True)
+    image = models.CharField(max_length=255)
     name = models.CharField(max_length=255, blank=True, null=False)
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=255)
-    phoneNo = models.CharField(max_length=20)
+    phoneNo = models.CharField(max_length=20, blank=True)
     status = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['name', 'phoneNo']
+    REQUIRED_FIELDS = ['name']
 
     objects = ParentManager()
 
@@ -101,7 +101,11 @@ class Subscription(models.Model):
 
 class Child(models.Model):
     childID = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    image = models.ImageField(upload_to='child_images/', blank=True, null=True)
+    image = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,  # Allow NULL in the database
+    )
     name = models.CharField(max_length=255)
     age = models.IntegerField()
     parent = models.ForeignKey(Parent, on_delete=models.CASCADE, related_name='children')
