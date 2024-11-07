@@ -51,6 +51,22 @@ class LoginForm(forms.Form):
 
 
 class ChildAccountForm(forms.ModelForm):
+    image = forms.ImageField(required=False)
+
     class Meta:
         model = Child
         fields = ['name', 'age', 'image']  # Fields for the child's information
+
+
+class ParentDetailForm(forms.ModelForm):
+    image = forms.ImageField(required=False)
+    class Meta:
+        model = Parent
+        fields = ['name', 'phoneNo', 'image']  # Exclude 'email' if not updatable
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Check if 'email' is in fields to avoid KeyError
+        if 'email' in self.fields:
+            self.fields['email'].disabled = True  # Make email read-only if present
+

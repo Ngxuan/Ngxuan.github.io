@@ -270,7 +270,9 @@
     <!-- Profile Picture and Dropdown -->
     <div class="profile-container">
             <div tabindex="0" class="dropdown-toggle">
-                <img src="{% static 'image/childProfile.png' %}" alt="Default Image" class="profile-picture">
+
+                <img class="profile-picture" id="profileImagePreview" src="{% if parent.image %}{{ parent.image }}{% else %}{% static 'image/childProfile.png' %}{% endif %}" alt="{{ parent.name }}">
+
             </div>
             <i class="fas fa-caret-down dropdown-arrow"></i>
             <div class="dropdown-menu">
@@ -279,8 +281,8 @@
                 {% else %}
                     <a href="{% url 'subscription_plans' %}">Upgrade to Plus</a>
                 {% endif %}
-                <a href="#">Profile</a>
-                <a href="#">Reset Password</a>
+                <a href="{% url 'parentDetail' %}">Profile</a>
+                <a href="{% url 'change_password' %}">Reset Password</a>
                 <a href="{% url 'logout' %}">Logout</a>
             </div>
         </div>
@@ -296,7 +298,8 @@
                         <div class="child-item">
                            <a href="{% url 'child_detail' child_id=child.childID %}">
                                 {% if child.image %}
-                                    <img src="{{ child.image.url }}" alt="{{ child.name }}">
+                                    <img src="{% if child.image %}{{ child.image }}{% else %}{% static 'image/childProfile.png' %}{% endif %}" alt="{{ child.name }}" class="profile-image">
+
                                 {% else %}
                                     <img src="{% static 'image/childProfile.png' %}" alt="Default Image">
                                 {% endif %}
