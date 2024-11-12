@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'component.achievement',
     'component.payment',
     'paypal.standard.ipn',
+    'hand_gesture',
 ]
 
 MIDDLEWARE = [
