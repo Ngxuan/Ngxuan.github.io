@@ -108,25 +108,34 @@ def update_child_achievement(sender, instance, **kwargs):
                     print(f"Total score: {progress_value}")
 
                 elif achievement.completion_metric == 'explore':
+
                     if content_type == 'ChildEduMaterial':
-                        unique_books = ChildEduMaterial.objects.filter(
-                            child=child, eduMaterial__type='book'  # Access type through related EducationalMaterial
-                        ).values('eduMaterial').distinct().count()
+                        if achievement.type == 'book':
+                            unique_books = ChildEduMaterial.objects.filter(
+                                child=child,
+                                eduMaterial__type='book'  # Filter for educational material type 'book'
+                            ).values('eduMaterial').distinct().count()
+                            progress_value = unique_books
+                            print(f"Unique books accessed: {unique_books}")
+                        elif achievement.type == 'video':
+                            # Count unique videos accessed by the child
+                            unique_videos = ChildEduMaterial.objects.filter(
+                                child=child,
+                                eduMaterial__type='video'  # Filter for educational material type 'video'
+                            ).values('eduMaterial').distinct().count()
+                            progress_value = unique_videos
+                            print(f"Unique videos accessed: {unique_videos}")
+                        else:
+                            # Handle other types if necessary (e.g., 'game', 'quiz')
+                            progress_value = 0
+                            print(f"No 'explore' metric calculation for achievement type: {achievement.type}")
 
-                        unique_videos = ChildEduMaterial.objects.filter(
-                            child=child, eduMaterial__type='video'
-                        ).values('eduMaterial').distinct().count()
-
-                        progress_value = unique_books + unique_videos  # Adjust based on your needs
-                        print(f"Unique books accessed: {unique_books}")
-                        print(f"Unique videos accessed: {unique_videos}")
-
-                    elif content_type == 'ChildGame':
+                elif content_type == 'ChildGame':
                         unique_items = ChildGame.objects.filter(child=child).values('game').distinct().count()
                         progress_value = unique_items
                         print(f"Unique games accessed: {unique_items}")
 
-                    elif content_type == 'ChildQuiz':
+                elif content_type == 'ChildQuiz':
                         unique_items = ChildQuiz.objects.filter(child=child).values('quiz').distinct().count()
                         progress_value = unique_items
                         print(f"Unique quizzes accessed: {unique_items}")

@@ -25,7 +25,7 @@ urlpatterns = [
     path('quizzes/', include('component.quiz.urls')),
     path('games/', include('component.game.urls')),
     path('payment/', include('component.payment.urls')),
-
+    path('hand_gesture/', include('hand_gesture.urls')),  # Add this line
 
 
 ]
