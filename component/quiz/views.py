@@ -1,5 +1,9 @@
+from datetime import timedelta
+
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
 from .models import Quiz, ChildQuiz
 import json
 from django.utils import timezone
@@ -29,65 +33,70 @@ def quiz_page(request, childID, quizID):
     })
 
 
+@csrf_exempt
 def save_quiz_result(request):
     """
-    Save the quiz result for the given child quiz.
-    If the child quiz does not exist, create it first and then save the result.
+    Save the quiz result and accumulate the time spent each time the quiz is answered.
     """
     if request.method == 'POST':
         try:
-            # Retrieve the quiz result data from the request body
-            data = json.loads(request.body)
-            print(f"Request Data: {data}")  # Debugging statement to print the incoming data
-
-            # Retrieve childID and quizID from the request data
-            child_id_str = data.get('childID')  # Retrieve childID from request body
-            quiz_id_str = data.get('quizID')  # Retrieve quizID from request body
+            # Parse JSON data from the request body
+            data = json.loads(request.body.decode('utf-8'))
             score = data.get('score', 0)  # Default to 0 if not provided
             correct_answers = data.get('correct_answers', 0)  # Default to 0 if not provided
+            time_spent_seconds = data.get('timeSpent', 0)  # Time spent on this submission in seconds
+
+            # Retrieve child and quiz using their unique IDs
+            child_id_str = data.get('childID')
+            quiz_id_str = data.get('quizID')
 
             if not child_id_str or not quiz_id_str:
                 return JsonResponse({'error': 'Missing child or quiz ID'}, status=400)
 
             # Convert string IDs to UUID objects
             try:
-                child_id = uuid.UUID(child_id_str)  # Use the correct UUID conversion for childID
-                quiz_id = uuid.UUID(quiz_id_str)  # Use the correct UUID conversion for quizID
-                print(f"Converted UUIDs - Child ID: {child_id}, Quiz ID: {quiz_id}")  # Debugging statement
+                child_id = uuid.UUID(child_id_str)  # Convert childID to UUID
+                quiz_id = uuid.UUID(quiz_id_str)  # Convert quizID to UUID
             except ValueError:
                 return JsonResponse({'error': 'Invalid UUID format for childID or quizID'}, status=400)
 
-            # Check if the child exists using the `childID` field, not the default `id`
-            child = Child.objects.filter(childID=child_id).first()
-            if not child:
-                print(f"No child found with childID: {child_id}")  # Debugging statement
-                return JsonResponse({'error': f'No Child matches the given query: {child_id}'}, status=400)
+            # Retrieve the child and quiz objects
+            child = get_object_or_404(Child, childID=child_id)
+            quiz = get_object_or_404(Quiz, quizID=quiz_id)
 
-            # Check if the quiz exists
-            quiz = Quiz.objects.filter(quizID=quiz_id).first()
-            if not quiz:
-                print(f"No quiz found with quizID: {quiz_id}")  # Debugging statement
-                return JsonResponse({'error': f'No Quiz matches the given query: {quiz_id}'}, status=400)
+            # Convert the time spent in seconds to a timedelta object
+            time_spent_duration = timedelta(seconds=int(time_spent_seconds))
 
-            # Retrieve or create the ChildQuiz instance using UUIDs
+            # Retrieve or create the ChildQuiz instance
             child_quiz, created = ChildQuiz.objects.get_or_create(
-                child=child,
-                quiz=quiz,
-                defaults={'status': False, 'startDate': timezone.now()}
+                child=child, quiz=quiz,
+                defaults={'childQuizID': str(uuid.uuid4()), 'timeSpent': time_spent_duration}  # Use time_spent_duration for first access
             )
 
-            # Update the ChildQuiz instance with the quiz result
+            # If the record already exists, accumulate the time spent based on the request
+            if not created:
+                # Add the new time spent (from the request) to the previous total time spent
+                child_quiz.timeSpent += time_spent_duration
+
+            # Update the ChildQuiz instance with quiz results
             child_quiz.score = score
             child_quiz.correct_answers = correct_answers
             child_quiz.status = True
-            child_quiz.timeSpent = timezone.now() - child_quiz.startDate
+
+            # Save the updated ChildQuiz instance
             child_quiz.save()
 
-            return JsonResponse({'message': 'Quiz result saved successfully'})
+            # Return the total time spent in seconds (converted back from timedelta)
+            total_time_spent_seconds = child_quiz.timeSpent.total_seconds()
+
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Quiz result saved successfully',
+                'totalTimeSpent': total_time_spent_seconds
+            })
+
         except Exception as e:
             print(f"Error saving quiz result: {e}")  # Print the error for debugging
-            return JsonResponse({'error': 'Failed to save quiz result'}, status=500)
+            return JsonResponse({'status': 'error', 'message': 'Failed to save quiz result'}, status=500)
     else:
-        return JsonResponse({'error': 'Invalid request method'}, status=400)
-
-
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)

@@ -187,6 +187,7 @@ def parent_dashboard_auth(request):
     return redirect('choose_profile')
 
 
+
 def convert_to_seconds(value):
     """Helper function to convert timedelta or None to seconds."""
     if isinstance(value, timedelta):
@@ -226,26 +227,30 @@ def child_detail(request, child_id):
     quiz_time = convert_to_seconds(quiz_time / 60)  # Convert to seconds
     game_time = convert_to_seconds(game_time / 60)  # Convert to seconds
 
-    # Calculate total time spent (all in seconds)
+    # Calculate total time spent (all in minutes)
     total_time_spent = book_time + video_time + quiz_time + game_time
 
-    # Convert total time to minutes
-    total_time_spent_minutes = total_time_spent / 60
+    # Convert total time to minutes and then calculate hours and minutes
+    minutes = int(total_time_spent)  # Ensure total time is in minutes (already in minutes)
+    hours = minutes // 60  # Get hours (integer division)
+    remaining_minutes = minutes % 60  # Get remaining minutes after hours
 
     # Prepare context data to pass to the template
     context = {
         'child': child,
         'quiz_scores': quiz_scores,
         'quiz_types': quiz_types,  # Pass the quiz types to the template
-        'book_time': book_time / 60,  # Convert seconds to minutes for display
-        'video_time': video_time / 60,  # Convert seconds to minutes for display
-        'quiz_time': quiz_time / 60,  # Convert seconds to minutes for display
-        'game_time': game_time / 60,  # Convert seconds to minutes for display
-        'total_time_spent': total_time_spent_minutes,  # Total time spent in minutes
+        'book_time': book_time ,  # Convert seconds to minutes for display
+        'video_time': video_time ,  # Convert seconds to minutes for display
+        'quiz_time': quiz_time ,  # Convert seconds to minutes for display
+        'game_time': game_time ,  # Convert seconds to minutes for display
+        'total_time_spent_hours': hours,  # Pass hours to template
+        'total_time_spent_minutes': remaining_minutes,  # Pass minutes to template
     }
 
     # Render the child detail template with the context data
     return render(request, 'childDetail.html', context)
+
 
 
 def subscription_plans_view(request):

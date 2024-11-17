@@ -95,11 +95,17 @@ def fetch_achievements(child_id):
     return achievements
 
 def format_time(seconds):
-    """Convert seconds to a string in 'X hours Y minutes' format."""
-    total_minutes = int(seconds / 60)  # Convert seconds to minutes
+    """Convert seconds to a string in 'X hours Y minutes' format with one decimal place."""
+    total_minutes = seconds / 60  # Convert seconds to minutes
     hours_part = total_minutes // 60
     minutes_part = total_minutes % 60
-    return f"{hours_part} hrs {minutes_part} mins" if hours_part > 0 else f"{minutes_part} mins"
+    # Format hours and minutes with one decimal place
+    if hours_part > 0:
+        return f"{hours_part:.1f} hrs {minutes_part:.1f} mins"
+    else:
+        return f"{minutes_part:.1f} mins"
+
+
 
 
 def generate_content_list(category, filtered_content):
@@ -121,20 +127,20 @@ def generate_content_list(category, filtered_content):
                     'completed': achievement.completed,
                     'currentValue': achievement.currentValue,
                     'targetValue': achievement.targetValue,
-                    'completionMetric' : achievement.completion_metric
+                    'completionMetric': achievement.completion_metric
                 }
-                # Conditionally format criteria for time_spent metric
+
+                # Format time for 'time_spent' metric
                 if achievement.completion_metric == 'time_spent':
+                    item['formattedCurrentValue'] = format_time(achievement.currentValue)
                     item['formattedCriteria'] = format_time(achievement.criteria)
-                else:
-                    item['formattedCriteria'] = str(achievement.criteria)
+
 
                 content_list.append(item)
     else:
         return list(filtered_content.values('eduMaterialID', 'title', 'file_url', 'thumbnail_url', 'type'))
 
     return content_list
-
 
 logger = logging.getLogger(__name__)
 

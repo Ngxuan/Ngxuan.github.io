@@ -332,10 +332,7 @@
         <!-- Video and Image Cards Section -->
         <div class="cardContainer" id="cardContainer" data-child-id="{{ child.childID }}"></div>
     </div>
-        <div class="text-center mt-4">
-            <h2>Real-time Gesture Detection</h2>
-            <img src="{% url 'video_feed' %}" width="640" height="480" alt="Real-time Video Feed">
-        </div>
+
     <!-- Left and Right Arrow Buttons for Pagination -->
     <button id="prevPageButton" class="nav-button">
         <img src="https://img.icons8.com/material-rounded/48/ffffff/left.png" alt="Previous">
@@ -440,7 +437,7 @@ function filterContent(category) {
             // Assuming `item.currentValue` holds the current progress and `item.targetValue` holds the total criteria
             if (item.completionMetric === 'time_spent' && item.formattedCriteria) {
                 // Display formatted criteria in hours and minutes
-                completionPercentage.innerText = `${item.currentValue} / ${item.formattedCriteria}`;
+                completionPercentage.innerText = `${item.formattedCurrentValue} / ${item.formattedCriteria}`;
             } else {
                 // Display as-is for other metrics
                 completionPercentage.innerText = `${item.currentValue} / ${item.targetValue}`;

@@ -3,60 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkout - {{ game.title }}</title>
+    <title>Checkout - Subscription Plans</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        /* Basic styling for the checkout page */
+        /* General page styling */
         body {
             font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
+            background: #FFFAE3;
+            color: #fff;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            margin: 0;
         }
-        .checkout-container {
-            background-color: #fff;
+
+              /* Header Styling */
+        .header {
+            display: flex;
+            align-items: center;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            max-width: 500px;
+            background-color: #fff;
+            border-bottom: 1px solid #eee;
             width: 100%;
-            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 40px;
+            z-index: 1000;
         }
-        .game-title {
-            font-size: 24px;
-            font-weight: bold;
+
+        .back-button {
+            text-decoration: none;
+            font-size: 30px;
+            color: black;
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+
+        .header h1 {
+            flex-grow: 1;
+            font-size: 30px;
+            text-align: center;
+            margin: 0;
             color: #333;
         }
-        .game-price {
-            font-size: 20px;
-            color: #1E90FF;
-            margin: 10px 0;
+                .back-button {
+            text-decoration: none;
+            font-size: 30px;
+            color: black;
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
         }
-        .payment-button {
-            margin-top: 20px;
-            font-size: 18px;
-            color: #fff;
-            background-color: #0070BA;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+
+
+        .checkout-container {
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: row;
+            max-width: 900px;
+            width: 100%;
+            color: #333;
+        }
+
+        /* Left Section: Plan options */
+        .plans-container {
+            flex: 1;
+            padding: 30px;
+            background-color: #f8f8f8;
+            border-top-left-radius: 15px;
+            border-bottom-left-radius: 15px;
+        }
+
+        .plans-container h2 {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .plan-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            margin-bottom: 15px;
             cursor: pointer;
+            background-color: #fff;
+            transition: border-color 0.3s ease, background-color 0.3s ease;
         }
-        .payment-button:hover {
-            background-color: #005EA6;
+
+        .plan-option:hover {
+            border-color: #4A148C;
         }
+
+        .plan-option input[type="radio"] {
+            margin-right: 15px;
+        }
+
+        .plan-option label {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .plan-option span {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Right Section: Review & Confirm */
+        .review-container {
+            flex: 1;
+            padding: 30px;
+        }
+
+        .review-container h2 {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .total {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+.fixed-paypal-form {
+    margin-top: 20px;
+    font-size: 18px; /* Font size adjustment for text inside the button */
+    border: none;
+    padding: 15px 20px; /* Adjust the padding for button size */
+    border-radius: 8px;
+    cursor: pointer;
+    width: auto; /* Change to auto to prevent stretching the button */
+    display: flex; /* Use flexbox for centering */
+    justify-content: center; /* Center the content horizontally */
+    align-items: center; /* Center the content vertically */
+    margin-left: auto; /* Add margin auto for centering */
+    margin-right: auto; /* Add margin auto for centering */
+}
+
+
+
+
+
+
+
     </style>
 </head>
 <body>
-    <div class="checkout-container">
-        <h1>Checkout - {{ plan.plan_name }}</h1>
-        <p>You are about to purchase the {{ plan.plan_name }} subscription plan for RM {{ plan.price }}.</p>
 
-        <!-- Render PayPal form directly -->
-        <div>
-            {{ paypal_redirect_url.render }}  <!-- This will render the PayPal form -->
+    <div class="header">
+        <a href="{% url 'subscription_plans' %}" class="back-button">
+            <i class="fa fa-arrow-left"></i>
+        </a>
+        <h1>CheckOut</h1>
+    </div>
+    <div class="checkout-container">
+        <!-- Left Section: Plan Options -->
+        <div class="plans-container">
+            <h2>Choose a plan for renewal</h2>
+            {% for plan in plans %}
+            <div class="plan-option">
+                <input
+                    type="radio"
+                    id="plan{{ plan.id }}"
+                    name="plan"
+                    value="{{ plan.id }}"
+                    {% if plan.id == selected_plan.id %}checked{% endif %}
+                    onclick="window.location.href='{% url 'payment:create_subscription_payment' plan.id %}'">
+                <label for="plan{{ plan.id }}">{{ plan.plan_name }}</label>
+                <span>RM {{ plan.price }} ({{ plan.plan_name }})</span>
+            </div>
+            {% endfor %}
         </div>
+        <!-- Right Section: Review & Confirm -->
+        <div class="review-container">
+            <h2>Review your plan</h2>
+            <p><strong>Plan:</strong> {{ selected_plan.plan_name }}</p>
+            <p><strong>Price:</strong> RM {{ selected_plan.price }}</p>
+
+            <p class="total"><strong>Total:</strong> RM {{ selected_plan.price }}</p>
+            <div class="fixed-paypal-form">
+                {{ paypal_redirect_url.render }} <!-- Render the PayPal form -->
+            </div>
+        </div>
+
     </div>
 </body>
 </html>

@@ -90,16 +90,31 @@ def update_child_achievement(sender, instance, **kwargs):
 
                 # Calculate progress based on completion metric
                 if achievement.completion_metric == 'time_spent':
-                    total_time_spent = ChildQuiz.objects.filter(child=child, quiz=achievement.quiz_title).aggregate(
-                        total_time=Sum('timeSpent')
-                    )['total_time'] or 0
+                    # Determine the title based on the type of achievement
+                    if achievement.type == 'quiz':
+                        # For quiz, filter by quiz_title
+                        total_time_spent = ChildQuiz.objects.filter(
+                            child=child,
+                            quiz=achievement.quiz_title
+                        ).aggregate(total_time=Sum('timeSpent'))['total_time'] or 0
+                    elif achievement.type == 'video':
+                        # For video, filter by video_title
+                        total_time_spent = ChildEduMaterial.objects.filter(
+                            child=child,
+                            eduMaterial__type='video',  # Ensure the related material is a video
+                            eduMaterial=achievement.video_title
 
+                        ).aggregate(total_time=Sum('timeSpent'))['total_time'] or 0
+                    else:
+                        total_time_spent = 0
+
+                    # Handle timedelta if total_time_spent is returned as timedelta
                     if isinstance(total_time_spent, datetime.timedelta):
                         total_time_spent = total_time_spent.total_seconds()
 
-                    progress_value = total_time_spent  # In seconds
+                    # Progress value in seconds
+                    progress_value = total_time_spent
                     print(f"Time spent (seconds): {progress_value}")
-
                 elif achievement.completion_metric == 'score':
                     total_score = ChildQuiz.objects.filter(child=child, quiz=achievement.quiz_title).aggregate(
                         total_score=Sum('score')
@@ -145,7 +160,19 @@ def update_child_achievement(sender, instance, **kwargs):
                 print(f"Completion Percentage: {completion_percentage}")
 
                 # Update child achievement progress
-                child_achievement.progress_value = progress_value
+                if achievement.criteria > 0:
+                    if progress_value > achievement.criteria:
+                        # Cap progress_value at the criteria value
+                        progress_value = achievement.criteria
+                        print(f"Progress value exceeds criteria. Capping progress value to: {progress_value}")
+                    completion_percentage = (progress_value / achievement.criteria) * 100
+                else:
+                    completion_percentage = 0
+
+                print(f"Completion Percentage: {completion_percentage}")
+
+                # Update child achievement progress
+                child_achievement.progress_value = progress_value  # Store the capped value
                 child_achievement.complete = completion_percentage >= 100
                 child_achievement.save()
 

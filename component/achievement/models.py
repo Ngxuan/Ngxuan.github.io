@@ -5,6 +5,8 @@ from component.user.models import Child
 from django.db import models
 import uuid
 from component.quiz.models import Quiz
+from component.eduMaterial.models import EducationalMaterial
+
 
 class Achievement(models.Model):
     ACHIEVEMENT_TYPE_CHOICES = [
@@ -30,6 +32,14 @@ class Achievement(models.Model):
     status = models.BooleanField(default=True)
 
     quiz_title = models.ForeignKey(Quiz, on_delete=models.SET_NULL, null=True, blank=True, related_name='achievements')
+    video_title = models.ForeignKey(
+        EducationalMaterial,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='achievements',
+        limit_choices_to={'type': 'video'}  # Only allow videos
+    )
 
     def __str__(self):
         return self.title
