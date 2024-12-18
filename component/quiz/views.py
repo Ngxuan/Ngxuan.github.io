@@ -4,7 +4,7 @@ from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import Quiz, ChildQuiz
+from .models import Quiz, ChildQuiz, ChildQuizLog
 import json
 from django.utils import timezone
 import uuid
@@ -35,68 +35,93 @@ def quiz_page(request, childID, quizID):
 
 @csrf_exempt
 def save_quiz_result(request):
-    """
-    Save the quiz result and accumulate the time spent each time the quiz is answered.
-    """
     if request.method == 'POST':
         try:
-            # Parse JSON data from the request body
+            # Parse and log incoming data
             data = json.loads(request.body.decode('utf-8'))
-            score = data.get('score', 0)  # Default to 0 if not provided
-            correct_answers = data.get('correct_answers', 0)  # Default to 0 if not provided
-            time_spent_seconds = data.get('timeSpent', 0)  # Time spent on this submission in seconds
+            print(f"Received data: {data}")
 
-            # Retrieve child and quiz using their unique IDs
+            # Extract values from the request
+            score = data.get('score', 0)
+            correct_answers = data.get('correct_answers', 0)
+            time_spent_seconds = data.get('timeSpent', 0)  # Time spent is directly received
+            print(f"timeSpent (seconds) received: {time_spent_seconds}")
+
+            # Validate child and quiz IDs
             child_id_str = data.get('childID')
             quiz_id_str = data.get('quizID')
 
             if not child_id_str or not quiz_id_str:
                 return JsonResponse({'error': 'Missing child or quiz ID'}, status=400)
 
-            # Convert string IDs to UUID objects
             try:
-                child_id = uuid.UUID(child_id_str)  # Convert childID to UUID
-                quiz_id = uuid.UUID(quiz_id_str)  # Convert quizID to UUID
+                child_id = uuid.UUID(child_id_str)
+                quiz_id = uuid.UUID(quiz_id_str)
             except ValueError:
                 return JsonResponse({'error': 'Invalid UUID format for childID or quizID'}, status=400)
 
-            # Retrieve the child and quiz objects
+            # Fetch child and quiz objects
             child = get_object_or_404(Child, childID=child_id)
             quiz = get_object_or_404(Quiz, quizID=quiz_id)
 
-            # Convert the time spent in seconds to a timedelta object
+            # Convert time spent to timedelta
             time_spent_duration = timedelta(seconds=int(time_spent_seconds))
+            print(f"timeSpent duration created: {time_spent_duration}")
 
-            # Retrieve or create the ChildQuiz instance
+            # Retrieve or create the ChildQuiz object
             child_quiz, created = ChildQuiz.objects.get_or_create(
-                child=child, quiz=quiz,
-                defaults={'childQuizID': str(uuid.uuid4()), 'timeSpent': time_spent_duration}  # Use time_spent_duration for first access
+                child=child,
+                quiz=quiz,
+                defaults={
+                    'childQuizID': str(uuid.uuid4()),
+                    'timeSpent': time_spent_duration or timedelta(seconds=0)  # Initialize with current time spent
+                }
             )
 
-            # If the record already exists, accumulate the time spent based on the request
-            if not created:
-                # Add the new time spent (from the request) to the previous total time spent
-                child_quiz.timeSpent += time_spent_duration
+            if created:
+                print(f"ChildQuiz created with timeSpent: {child_quiz.timeSpent}")
+            else:
+                print(f"ChildQuiz found. Current timeSpent: {child_quiz.timeSpent}")
+                if child_quiz.timeSpent is None:
+                    child_quiz.timeSpent = timedelta(seconds=0)  # Ensure it starts from 0 if not initialized
+                child_quiz.timeSpent += time_spent_duration  # Accumulate the new time spent
+                print(f"Updated timeSpent: {child_quiz.timeSpent}")
 
-            # Update the ChildQuiz instance with quiz results
+            # Update quiz results
             child_quiz.score = score
             child_quiz.correct_answers = correct_answers
             child_quiz.status = True
 
-            # Save the updated ChildQuiz instance
-            child_quiz.save()
+            # Save the ChildQuiz object
+            try:
+                child_quiz.save()
+                print(f"Final saved timeSpent: {child_quiz.timeSpent}")
+            except Exception as e:
+                print(f"Error saving ChildQuiz: {e}")
+                return JsonResponse({'status': 'error', 'message': 'Failed to save ChildQuiz object'}, status=500)
 
-            # Return the total time spent in seconds (converted back from timedelta)
+            # Create a log entry in ChildQuizLog
+            child_quiz_log = ChildQuizLog.objects.create(
+                childQuizLogID=str(uuid.uuid4()),
+                child=child,
+                quiz=quiz,
+                time_spent=time_spent_duration,
+                access_date=timezone.now()  # Log the exact date and time of the quiz access
+            )
+            print(f"ChildQuizLog created: {child_quiz_log}")
+
+            # Return the total accumulated time spent in seconds
             total_time_spent_seconds = child_quiz.timeSpent.total_seconds()
 
             return JsonResponse({
                 'status': 'success',
                 'message': 'Quiz result saved successfully',
-                'totalTimeSpent': total_time_spent_seconds
+                'timeSpent': total_time_spent_seconds
             })
 
         except Exception as e:
-            print(f"Error saving quiz result: {e}")  # Print the error for debugging
+            print(f"Error saving quiz result: {e}")
             return JsonResponse({'status': 'error', 'message': 'Failed to save quiz result'}, status=500)
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
+

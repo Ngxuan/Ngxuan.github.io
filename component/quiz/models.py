@@ -64,3 +64,11 @@ class ChildQuiz(models.Model):
 
     def __str__(self):
         return f"{self.child.name} - {self.quiz.title}"  # Use quiz title for display
+
+
+class ChildQuizLog(models.Model):
+    childQuizLogID = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
+    access_date = models.DateTimeField(default=timezone.now)  # Automatically set the play date
+    time_spent = models.DurationField()  # Duration field to store time spent on the game
+    child = models.ForeignKey(Child, on_delete=models.CASCADE, related_name='child_quizzes_log')
+    quiz = models.ForeignKey('Quiz', on_delete=models.CASCADE, related_name='child_quizzes_log')

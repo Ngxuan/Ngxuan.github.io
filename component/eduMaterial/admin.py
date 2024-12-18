@@ -2,7 +2,7 @@
 
 from django import forms
 from django.contrib import admin
-from .models import EducationalMaterial, ChildEduMaterial
+from .models import EducationalMaterial
 from component.supabase_client import upload_file_to_supabase  # Import your Supabase upload function
 
 class EducationalMaterialAdminForm(forms.ModelForm):
@@ -87,4 +87,4 @@ class EducationalMaterialAdmin(admin.ModelAdmin):
 
 # Register the admin models
 admin.site.register(EducationalMaterial, EducationalMaterialAdmin)
-admin.site.register(ChildEduMaterial)
+

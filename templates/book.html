@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book Viewer</title>
+        {% load static %}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -15,7 +16,7 @@
         height: 100%;
         width: 100%;
         font-family: 'Arial', sans-serif;
-        background-color: #f5f5f5;
+        background-color: #ffffff;
         overflow: hidden;
     }
 
@@ -33,7 +34,7 @@
     #bookContent {
         flex: 1;
         width: 85%;
-        height: 80%;
+        height: 50%;
         border-radius: 10px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         display: flex;
@@ -48,129 +49,177 @@
         height: 100%;
     }
 
-    .home-button {
-        position: absolute;
-        top: 20px;
-        left: 20px;
-        background: #17a2b8;
-        border: none;
-        border-radius: 50%;
-        padding: 10px;
-        cursor: pointer;
-        z-index: 1000;
-        transition: background 0.3s, transform 0.3s;
+/* Buttons Container */
+.buttons-container {
+    display: flex;
+    justify-content: space-between;  /* Distribute items evenly */
+    align-items: center;
+    width: 100%;
+    position: absolute;
+    bottom: 20px;
+    padding: 0 20px;
+}
+
+/* Left section with Home and Volume buttons */
+.left-buttons {
+    display: flex;
+    gap: 30px;  /* Adds space between Home and Volume buttons */
+    margin-left: 20%;
+}
+
+/* Center page info (Page Number) */
+.page-info {
+    font-size: 18px;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Right section with Previous and Next buttons */
+.right-buttons {
+    display: flex;
+    gap: 50px;  /* Adds space between Previous and Next buttons */
+    margin-right: 20%;
+}
+
+/* Button Styling */
+.button {
+    background-color: rgba(23, 162, 184, 0.85);
+    border: none;
+    border-radius: 50%;
+    padding: 25px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.3s;
+}
+
+.button:hover {
+    background-color: #138496;
+    transform: scale(1.1);
+}
+
+.button img, .button i {
+    width: 40px;
+    height: 40px;
+    color: #ffffff;
+}
+
+    #volumeButton i {
+    color: #ffffff;
+    font-size: 32px; /* Increased font size for the icon */
+}
+
+
+
+    .video-container {
+        display: none; /* Hide the video feed */
     }
 
-    .home-button:hover {
-        background: #138496;
-        transform: scale(1.1);
+
+  /* Modal Styles (optional customization) */
+  .modal-content {
+      border-radius: 15px;
+  }
+
+#instructionIcon i {
+    font-size: 35px;
+}
+/* **End of Updated CSS for Instruction Icon** */
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .instruction-icon {
+        width: 50px;
+        height: 50px;
     }
 
-    .home-button img {
-        width: 30px;
-        height: 30px;
+    .instruction-icon i {
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 576px) {
+    .instruction-icon {
+        width: 45px;
+        height: 45px;
     }
 
-    .nav-button {
-        position: absolute;
-        top: 50%;
-        background: #17a2b8;
-        border: none;
-        border-radius: 50%;
-        padding: 15px;
-        cursor: pointer;
-        z-index: 1000;
-        transition: background 0.3s, transform 0.3s;
-    }
-
-    .nav-button:hover {
-        background: #138496;
-        transform: scale(1.1);
-    }
-
-    .nav-button img {
-        width: 40px;
-        height: 40px;
-    }
-
-    #prevPage {
-        left: 20px;
-        transform: translateY(-50%);
-    }
-
-    #nextPage {
-        right: 20px;
-        transform: translateY(-50%);
-    }
-
-    .page-info {
-        position: absolute;
-        bottom: 20px;
+    .instruction-icon i {
         font-size: 18px;
-        color: #fff;
-        background: rgba(0, 0, 0, 0.7);
-        padding: 10px 20px;
-        border-radius: 15px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
+}
 
-    .volume-button {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        background: #17a2b8;
-        border: none;
-        border-radius: 50%;
-        padding: 10px;
-        cursor: pointer;
-        z-index: 1000;
-        transition: background 0.3s, transform 0.3s;
-    }
+      /* **End of New CSS** */
 
-    .volume-button:hover {
-        background: #138496;
-        transform: scale(1.1);
-    }
-
-    .volume-button i {
-        color: #ffffff;
-        font-size: 24px;
-    }
+      /* Adjust Close Button in Modal */
+      .modal-header {
+          display: flex;
+          justify-content: flex-end; /* Align close button to the right */
+      }
 </style>
 
 <body>
 <div class="book-viewer">
-    <!-- Home button -->
-    <a href="{% url 'child_home' childID=childID %}" class="home-button" id="homeButton">
-        <button style="background: transparent; border: none;">
-            <img src="https://img.icons8.com/material-rounded/24/ffffff/home.png" alt="Home">
-        </button>
-    </a>
-
-    <!-- Volume button for TTS -->
-    <button class="volume-button" id="volumeButton">
-        <i class="fas fa-volume-up"></i>
-    </button>
-
     <!-- Display the book content in the canvas for PDF display -->
     <div id="bookContent">
         <canvas id="pdfViewer"></canvas>
     </div>
 
-    <!-- Navigation buttons -->
-    <button id="prevPage" class="nav-button">
-        <img src="https://img.icons8.com/material-rounded/48/ffffff/left.png" alt="Previous">
-    </button>
-    <button id="nextPage" class="nav-button">
-        <img src="https://img.icons8.com/material-rounded/48/ffffff/right.png" alt="Next">
-    </button>
+    <!-- Buttons Container -->
+    <div class="buttons-container">
+        <!-- Left buttons: Home and Volume -->
+        <div class="left-buttons">
+            <a href="{% url 'child_home' childID=childID %}" class="button" id="homeButton">
+                <img src="https://img.icons8.com/material-rounded/24/ffffff/home.png" alt="Home">
+            </a>
+            <button class="button" id="volumeButton">
+                <i class="fas fa-volume-off"></i>
+            </button>
+                <!-- **New Instruction Icon Button** -->
+            <button class="button" id="instructionIcon" aria-label="Show Instructions">
+                <i class="fa fa-info-circle"></i>
+            </button>
+        </div>
 
-    <!-- Page info -->
-    <div class="page-info">
-        Page: <span id="pageNum">1</span> / <span id="pageCount">--</span>
+        <!-- Page info in the center -->
+        <div class="page-info">
+            Page: <span id="pageNum">1</span> / <span id="pageCount">--</span>
+        </div>
+        <!-- Right buttons: Previous and Next -->
+        <div class="right-buttons">
+            <button id="prevPage" class="button">
+                <img src="https://img.icons8.com/material-rounded/48/ffffff/left.png" alt="Previous">
+            </button>
+            <button id="nextPage" class="button">
+                <img src="https://img.icons8.com/material-rounded/48/ffffff/right.png" alt="Next">
+            </button>
+        </div>
     </div>
-</div>
 
+
+
+<!-- Instruction Modal -->
+<div class="modal fade" id="instructionModal" tabindex="-1" aria-labelledby="instructionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <!-- Modal Header with Close Button -->
+      <div class="modal-header">
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <!-- Modal Body with Instruction Image and Text -->
+      <div class="modal-body text-center">
+        <img src="{% static 'image/bookInstruction.png' %}" alt="Gesture Instructions" class="img-fluid mb-3">
+
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<div class="video-container">
+    <!-- Load video feed from the video_feed endpoint -->
+    <img src="{% url 'video_feed' %}" alt="Real-time Video Feed">
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
 <script>
 // Set the path to the worker script
@@ -245,6 +294,9 @@ function queueRenderPage(num) {
 let audio = null;
 let ttsActive = false;    // Track if TTS should auto-play on page navigation
 let ttsInProgress = false; // Track if a TTS request is in progress
+const volumeButton = document.getElementById('volumeButton');
+const volumeIcon = volumeButton.querySelector('i');
+
 
 // Function to stop and remove audio if it's playing
 function stopAudio() {
@@ -255,20 +307,61 @@ function stopAudio() {
         audio = null;                // Remove the audio object
     }
 }
+// Function to toggle TTS and volume button based on the class
+function toggleTTSBasedOnClass(classNumber) {
+    if (classNumber === 2) {
+        // If TTS is not already active, start it
+        if (!ttsActive) {
+            console.log("Starting TTS...");
+
+            // Enable TTS and start reading the current page
+            ttsActive = true;
+            ttsInProgress = false; // Ensure TTS is not in progress before starting
+
+            // Start TTS on the current page
+            pdfDoc.getPage(pageNum).then(function(page) {
+                requestTTSForPage(page);
+            });
+
+            // Change the icon to volume-up (unmuted state)
+            volumeIcon.classList.remove('fa-volume-off');
+            volumeIcon.classList.add('fa-volume-up');
+        } else {
+            console.log("TTS is already active. No need to restart.");
+        }
+    } else if (classNumber === 3) {
+        // Stop TTS and pause audio
+        stopAudio();
+        ttsActive = false;
+        ttsInProgress = false;  // Reset the TTS in progress flag
+
+        // Change the icon to volume-off (muted state)
+        volumeIcon.classList.remove('fa-volume-up');
+        volumeIcon.classList.add('fa-volume-off');
+    }
+}
 
 // Toggle TTS on volume button click
-document.getElementById('volumeButton').addEventListener('click', function() {
+volumeButton.addEventListener('click', function() {
     if (ttsActive) {
         // If TTS is active, stop it and turn off auto-TTS
         stopAudio();
         ttsActive = false;
         ttsInProgress = false;  // Reset the TTS in progress flag
+
+        // Change the icon to volume-up (muted state)
+        volumeIcon.classList.add('fa-volume-off');
+        volumeIcon.classList.remove('fa-volume-up');
     } else {
         // Enable TTS and start reading the current page
         ttsActive = true;
         pdfDoc.getPage(pageNum).then(function(page) {
             requestTTSForPage(page);
         });
+
+        // Change the icon to volume-mute (unmuted state)
+        volumeIcon.classList.add('fa-volume-up');
+        volumeIcon.classList.remove('fa-volume-off');
     }
 });
 
@@ -350,6 +443,110 @@ window.addEventListener('beforeunload', function() {
     });
 });
 
+
+
+
+const GESTURE_CLASSES = {
+    NEXT: 7,     // 'H' Gesture (Next)
+    PREVIOUS: 6  // 'G' Gesture (Previous)
+};
+
+// Function to fetch gesture class from the backend
+function getGestureClassFromBackend() {
+    fetch("{% url 'get_last_gesture' %}")  // URL for your Django view
+        .then(response => response.json())
+        .then(data => {
+            const detectedClass = data.gesture_class;
+            checkAndTriggerAction(detectedClass);  // Trigger the appropriate action
+        })
+        .catch(error => {
+            console.error("Error fetching gesture class:", error);
+        });
+}
+
+// Function to trigger actions based on the detected class
+function checkAndTriggerAction(detectedClass) {
+    console.log("Detected class:", detectedClass);  // Debugging log
+
+    // Ensure that detectedClass is an integer
+    const detectedClassInt = parseInt(detectedClass, 10);
+
+    // Compare against numeric values for Next and Previous gestures
+    if (detectedClassInt === GESTURE_CLASSES.NEXT) {
+        console.log("Gesture for NEXT detected.");
+        document.getElementById('nextPage').click();  // Trigger "Next" button click
+    } else if (detectedClassInt === GESTURE_CLASSES.PREVIOUS) {
+        console.log("Gesture for PREVIOUS detected.");
+        document.getElementById('prevPage').click();  // Trigger "Previous" button click
+    } else if (detectedClassInt === 8) {
+        redirectToProfilePage();  // Handle Class 8 action
+        console.log("Gesture for REDIRECT detected.");
+    // Check for class 10 (Enable TTS)
+    }else if (detectedClassInt === 2) {
+        console.log("Gesture for ENABLE TTS detected.");
+        toggleTTSBasedOnClass(2);  // Trigger TTS and volume button change
+    }
+    // Check for class 9 (Stop or pause TTS)
+    else if (detectedClassInt === 3) {
+        console.log("Gesture for DISABLE TTS detected.");
+        toggleTTSBasedOnClass(3);  // Stop TTS and change volume button icon
+    }
+    else if (detectedClassInt === 5) {
+        closeInstructionModal();
+    }
+}
+
+// Helper function to redirect to the profile page
+function redirectToProfilePage() {
+    window.location.href = '{% url 'child_home' childID=childID %}'; // Redirect to 'choose_profile' URL
+}
+
+   // Function to close the instruction modal
+    function closeInstructionModal() {
+        var instructionModalElement = document.getElementById('instructionModal');
+        var instructionModal = bootstrap.Modal.getInstance(instructionModalElement);
+        if (instructionModal) {
+            instructionModal.hide();
+        }
+    }
+
+    // **Attach Click Event to Instruction Icon**
+document.addEventListener('DOMContentLoaded', function() {
+    const instructionIcon = document.getElementById('instructionIcon');
+    if (instructionIcon) {
+        instructionIcon.addEventListener('click', function() {
+            var instructionModal = new bootstrap.Modal(document.getElementById('instructionModal'), {
+                backdrop: 'static',
+                keyboard: false
+            });
+            instructionModal.show();
+        });
+    }
+
+    // Handle Instruction Modal Display Based on URL Parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const showInstructions = urlParams.get('show_instructions');
+
+    if (showInstructions === 'true' && !sessionStorage.getItem('instructionShown')) {
+        var instructionModal = new bootstrap.Modal(document.getElementById('instructionModal'), {
+            backdrop: 'static',
+            keyboard: false
+        });
+        instructionModal.show();
+
+
+
+        // Remove the 'show_instructions' parameter from the URL
+        const url = new URL(window.location);
+        url.searchParams.delete('show_instructions');
+        window.history.replaceState({}, document.title, url.pathname + url.search);
+    }
+});
+
+
+// Call the function to fetch the gesture class periodically (e.g., every second)
+setInterval(getGestureClassFromBackend, 4000);
 </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

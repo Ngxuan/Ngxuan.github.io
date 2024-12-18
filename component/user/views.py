@@ -2,17 +2,21 @@ import uuid
 
 
 import re
+
+from django.db.models import Sum
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, update_session_auth_hash
+from django.views.decorators.http import require_POST
+
 from .forms import ParentRegistrationForm, ParentDetailForm
 from .forms import LoginForm
 from .forms import ChildAccountForm
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404
-from component.game.models import Game # Import Game and GamePurchase models
-from component.quiz.models import ChildQuiz, QuizType  # Import the ChildQuiz model to get quiz scores
+from component.game.models import Game, ChildGameLog  # Import Game and GamePurchase models
+from component.quiz.models import ChildQuiz, QuizType, ChildQuizLog  # Import the ChildQuiz model to get quiz scores
 from component.eduMaterial.models import EducationalMaterial  # For tracking time spent on materials
 from component.game.models import ChildGame
 from django.db import models
@@ -22,7 +26,8 @@ from django.contrib.auth import logout
 from django.utils import timezone
 from django.urls import reverse_lazy
 from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
-
+from datetime import datetime, timedelta
+from django.utils.timezone import make_aware
 from ..supabase_client import sanitize_file_name, upload_file_to_supabase
 
 
@@ -72,6 +77,9 @@ def logout_view(request):
     messages.success(request, 'You have been logged out.')
     return redirect('login')  # Redirect to login page or homepage
 
+from django.core.exceptions import ValidationError, PermissionDenied
+from datetime import timedelta
+
 @login_required
 def add_child_account(request):
     parent = request.user
@@ -87,6 +95,25 @@ def add_child_account(request):
     if request.method == 'POST':
         form = ChildAccountForm(request.POST, request.FILES)
         if form.is_valid():
+            # Extract the birthday from the form's cleaned data
+            birthday = form.cleaned_data.get('birthday')
+
+            # Validate the birthday
+            if birthday:
+                today = timezone.now().date()
+                min_age_date = today - timedelta(days=365)  # Child must be at least 1 year old
+                max_age_date = today - timedelta(days=365 * 5)  # Child cannot be older than 5 years
+
+                if birthday > min_age_date:
+                    form.add_error('birthday', 'Child must be at least 1 year old.')
+                elif birthday < max_age_date:
+                    form.add_error('birthday', 'Child cannot be older than 5 year old.')
+
+            # If there are any form errors after the custom validation
+            if form.errors:
+                return render(request, 'addChild.html', {'form': form})
+
+            # If the form is still valid, proceed with saving the child
             child = form.save(commit=False)
             child.parent = parent  # Associate the child with the logged-in parent
 
@@ -106,6 +133,7 @@ def add_child_account(request):
         form = ChildAccountForm()
 
     return render(request, 'addChild.html', {'form': form})
+
 
 
 
@@ -194,9 +222,12 @@ def convert_to_seconds(value):
         return value.total_seconds()
     return value if isinstance(value, (int, float)) else 0
 
+
+
 def child_detail(request, child_id):
     """
     View to display the child details, time spent on activities, and quiz scores.
+    Allows parents to filter by predefined ranges or custom date ranges.
     """
     # Fetch the child object using the child_id
     child = get_object_or_404(Child, childID=child_id)
@@ -207,49 +238,130 @@ def child_detail(request, child_id):
     # Fetch all quiz types for the filter dropdown
     quiz_types = QuizType.objects.all()  # Assuming QuizType is your model for quiz types
 
+    # Get the time filter and custom dates from the request
+    time_filter = request.GET.get('time_filter', 'daily')
+    custom_start_date_str = request.GET.get('custom_start_date')
+    custom_end_date_str = request.GET.get('custom_end_date')
+
+    # Initialize start_date and end_date
+    start_date = None
+    end_date = None
+
+    # Check if custom dates are provided
+    if custom_start_date_str and custom_end_date_str:
+        try:
+            # Parse the custom dates
+            start_date = datetime.strptime(custom_start_date_str, '%Y-%m-%d')
+            end_date = datetime.strptime(custom_end_date_str, '%Y-%m-%d')
+
+            # Adjust end_date to include the entire day
+            end_date = end_date + timedelta(days=1) - timedelta(seconds=1)
+
+            # Make the dates timezone-aware
+            start_date = make_aware(start_date)
+            end_date = make_aware(end_date)
+
+            # Format the dates for display
+            formatted_start_date = start_date.strftime('%B %d, %Y')  # Example: "November 29, 2024"
+            formatted_end_date = end_date.strftime('%B %d, %Y')      # Example: "December 03, 2024"
+
+        except ValueError:
+            # If parsing fails, default to time_filter
+            start_date, end_date, formatted_start_date, formatted_end_date = get_date_range(time_filter)
+    else:
+        # If no custom dates, use time_filter
+        start_date, end_date, formatted_start_date, formatted_end_date = get_date_range(time_filter)
+
+    print(f"Start date for filter '{time_filter}': {start_date}")
+
     # Fetch time spent on different activities (Books, Videos, Quizzes, Games)
+    # Total time spent on books by the child within the selected date range
     book_time = EducationalMaterial.objects.filter(
         type='book',
-        child_edu_materials__child=child
-    ).aggregate(total_time=models.Sum('child_edu_materials__timeSpent'))['total_time'] or 0
+        child_edu_material_log__child=child,  # Access the related 'child_edu_material_log' related manager
+        child_edu_material_log__access_date__gte=start_date  # Filter on the 'access_date' field
+    ).aggregate(total_time=Sum('child_edu_material_log__time_spent'))['total_time'] or timedelta(0)
 
+    # Similarly for videos
     video_time = EducationalMaterial.objects.filter(
         type='video',
-        child_edu_materials__child=child
-    ).aggregate(total_time=models.Sum('child_edu_materials__timeSpent'))['total_time'] or 0
+        child_edu_material_log__child=child,
+        child_edu_material_log__access_date__gte=start_date  # Filter on the 'access_date' field
+    ).aggregate(total_time=Sum('child_edu_material_log__time_spent'))['total_time'] or timedelta(0)
 
-    quiz_time = ChildQuiz.objects.filter(child=child).aggregate(total_time=models.Sum('timeSpent'))['total_time'] or 0
-    game_time = ChildGame.objects.filter(child=child).aggregate(total_time=models.Sum('timeSpent'))['total_time'] or 0
+    # For quizzes
+    quiz_time = ChildQuizLog.objects.filter(
+        child=child,
+        access_date__gte=start_date  # 'access_date' is directly on the 'ChildQuizLog' model
+    ).aggregate(total_time=Sum('time_spent'))['total_time'] or timedelta(0)
 
-    # Ensure all time values are converted to seconds
-    book_time = convert_to_seconds(book_time / 60)  # Convert to seconds
-    video_time = convert_to_seconds(video_time / 60)  # Convert to seconds
-    quiz_time = convert_to_seconds(quiz_time / 60)  # Convert to seconds
-    game_time = convert_to_seconds(game_time / 60)  # Convert to seconds
+    # For games
+    game_time = ChildGameLog.objects.filter(
+        child=child,
+        access_date__gte=start_date  # 'access_date' is directly on the 'ChildGameLog' model
+    ).aggregate(total_time=Sum('time_spent'))['total_time'] or timedelta(0)
 
-    # Calculate total time spent (all in minutes)
-    total_time_spent = book_time + video_time + quiz_time + game_time
+    # Ensure all time values are converted to seconds (use convert_to_seconds utility)
+    book_time_seconds = convert_to_seconds(book_time)
+    video_time_seconds = convert_to_seconds(video_time)
+    quiz_time_seconds = convert_to_seconds(quiz_time)
+    game_time_seconds = convert_to_seconds(game_time)
+
+    # Calculate total time spent (all in seconds)
+    total_time_spent_seconds = book_time_seconds + video_time_seconds + quiz_time_seconds + game_time_seconds
 
     # Convert total time to minutes and then calculate hours and minutes
-    minutes = int(total_time_spent)  # Ensure total time is in minutes (already in minutes)
-    hours = minutes // 60  # Get hours (integer division)
-    remaining_minutes = minutes % 60  # Get remaining minutes after hours
+    total_minutes = total_time_spent_seconds // 60  # Total minutes
+    hours = total_minutes // 60  # Get hours (integer division)
+    remaining_minutes = total_minutes % 60  # Get remaining minutes after hours
 
     # Prepare context data to pass to the template
     context = {
         'child': child,
         'quiz_scores': quiz_scores,
         'quiz_types': quiz_types,  # Pass the quiz types to the template
-        'book_time': book_time ,  # Convert seconds to minutes for display
-        'video_time': video_time ,  # Convert seconds to minutes for display
-        'quiz_time': quiz_time ,  # Convert seconds to minutes for display
-        'game_time': game_time ,  # Convert seconds to minutes for display
+        'book_time': book_time_seconds / 60,  # Convert seconds to minutes for display
+        'video_time': video_time_seconds / 60,  # Convert seconds to minutes for display
+        'quiz_time': quiz_time_seconds / 60,  # Convert seconds to minutes for display
+        'game_time': game_time_seconds / 60,  # Convert seconds to minutes for display
         'total_time_spent_hours': hours,  # Pass hours to template
         'total_time_spent_minutes': remaining_minutes,  # Pass minutes to template
+        'time_filter': time_filter,  # Pass the time filter to the template
+        'formatted_start_date': formatted_start_date,  # Passing the formatted start date
+        'formatted_end_date': formatted_end_date,
+        'custom_start_date': custom_start_date_str if custom_start_date_str else '',
+        'custom_end_date': custom_end_date_str if custom_end_date_str else '',
     }
 
     # Render the child detail template with the context data
     return render(request, 'childDetail.html', context)
+
+def get_date_range(time_filter):
+    """
+    Helper function to determine the start_date and end_date based on the time_filter.
+    Returns a tuple of (start_date, end_date, formatted_start_date, formatted_end_date).
+    """
+    now = datetime.now()
+    if time_filter == 'daily':
+        start_date = now - timedelta(days=1)
+    elif time_filter == 'weekly':
+        start_date = now - timedelta(weeks=1)
+    elif time_filter == 'monthly':
+        start_date = now - timedelta(days=30)
+    else:
+        start_date = now - timedelta(days=1)  # Default to daily
+
+    end_date = now
+
+    # Ensure the time is aware (timezone-aware datetime object)
+    start_date = make_aware(start_date)
+    end_date = make_aware(end_date)
+
+    # Format the start date and end date for display
+    formatted_start_date = start_date.strftime('%B %d, %Y')  # Example: "November 29, 2024"
+    formatted_end_date = end_date.strftime('%B %d, %Y')      # Example: "December 03, 2024"
+
+    return start_date, end_date, formatted_start_date, formatted_end_date
 
 
 
@@ -322,6 +434,7 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
             del request.session['password_reset_success']
         return super().get(request, *args, **kwargs)
 
+
 @login_required
 def update_child_profile(request, child_id):
     child = get_object_or_404(Child, childID=child_id)  # Fetch the child instance
@@ -345,20 +458,32 @@ def update_child_profile(request, child_id):
                     if image_url:
                         child.image = image_url  # Update child's image if a new image is uploaded
                     else:
-                        return JsonResponse({'success': False, 'errors': 'Failed to upload image to Supabase.'},
-                                            status=400)
+                        return JsonResponse({'success': False, 'message': 'Failed to upload image to Supabase.'},
+                                             status=400)
                 except Exception as e:
                     print(f"Error during upload: {e}")  # Log any upload errors
-                    return JsonResponse({'success': False, 'errors': 'An error occurred while uploading the image.'},
-                                        status=500)
+                    return JsonResponse({'success': False, 'message': 'An error occurred while uploading the image.'},
+                                         status=500)
 
             # Save the rest of the form data without modifying the image if no new image was uploaded
             form.save()  # This saves the child's name and age regardless of whether the image is updated
             return JsonResponse({'success': True, 'message': 'Profile updated successfully!'})
         else:
-            return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+            # Collect custom error messages and return them as a JSON response
+            error_messages = []
+            for field, errors in form.errors.items():
+                for error in errors:
+                    if field == 'birthday' and 'age_under_1' in error:
+                        error_messages.append("Child must be at least 1 year old.")
+                    elif field == 'birthday' and 'age_over_5' in error:
+                        error_messages.append("Child cannot be older than 5 year old.")
+                    else:
+                        error_messages.append(error)
+
+            return JsonResponse({'success': False, 'message': 'Error(s) occurred', 'errors': error_messages}, status=400)
 
     return JsonResponse({'success': False, 'message': 'Invalid request method.'}, status=400)
+
 
 
 @login_required
@@ -424,3 +549,45 @@ def change_password(request):
             messages.error(request, 'Current password is incorrect.')
 
     return render(request, 'changePassword.html')
+
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from .models import Child  # Ensure this import is correct
+
+@require_POST
+@login_required
+def delete_child_account(request):
+    child_id = request.POST.get('child_id')
+    print(f"Delete request received for child_id: {child_id}")
+
+    if not child_id:
+        print("Error: No child ID provided.")
+        return JsonResponse({'success': False, 'error': 'No child ID provided.'}, status=400)
+
+    try:
+        child = Child.objects.get(childID=child_id)
+        print(f"Child found: {child.name}")
+
+        # **Access the Parent directly as request.user**
+        if child.parent != request.user:
+            print("Permission denied: User attempted to delete a child not associated with them.")
+            raise PermissionDenied("You do not have permission to delete this child account.")
+
+        child.delete()
+        print(f"Child account '{child.name}' deleted successfully.")
+        return JsonResponse({'success': True})
+
+    except Child.DoesNotExist:
+        print("Error: Child does not exist.")
+        return JsonResponse({'success': False, 'error': 'Child does not exist.'}, status=404)
+
+    except PermissionDenied as pd:
+        print(f"Permission Denied: {pd}")
+        return JsonResponse({'success': False, 'error': str(pd)}, status=403)
+
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return JsonResponse({'success': False, 'error': 'An unexpected error occurred.'}, status=500)

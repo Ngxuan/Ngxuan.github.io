@@ -30,3 +30,9 @@ class ChildEduMaterial(models.Model):
     def __str__(self):
         return f"{self.child.name} - {self.eduMaterial.title}"
 
+class ChildEduMaterialLog(models.Model):
+    childEduMaterialLogID = models.CharField(max_length=100, primary_key=True)
+    child = models.ForeignKey(Child, on_delete=models.CASCADE, related_name='child_edu_material_log')
+    edu_material = models.ForeignKey(EducationalMaterial, on_delete=models.CASCADE, related_name='child_edu_material_log')
+    access_date = models.DateTimeField(default=timezone.now)  # Log every access date and time
+    time_spent = models.DurationField()  # Track time spent on this access event

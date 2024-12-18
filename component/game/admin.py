@@ -2,7 +2,8 @@ from django import forms
 from django.contrib import admin
 from .models import GameType, Game, GameQuestion, GameQuestionOption, ChildGame
 from component.supabase_client import upload_file_to_supabase  # Import the Supabase upload function
-
+import os
+from django.conf import settings
 # Define a constant for the Supabase bucket name
 BUCKET_NAME = 'fyp'  # Name of the bucket in Supabase storage
 
@@ -65,10 +66,11 @@ class GameQuestionAdmin(admin.ModelAdmin):
     inlines = [GameQuestionOptionInline]  # Include inline for options
 
 
-# Custom Admin Form for Game
+
 class GameAdminForm(forms.ModelForm):
-    # Create a custom file field for uploading the game logo
+    # Create custom file fields for uploading the game logo and HTML file
     upload_logo = forms.FileField(required=False, label='Upload Game Logo to Supabase')
+    upload_html = forms.FileField(required=False, label='Upload HTML Template File')
 
     class Meta:
         model = Game
@@ -77,11 +79,13 @@ class GameAdminForm(forms.ModelForm):
 
     def save(self, commit=True):
         """
-        Override the save method to handle logo upload to Supabase.
+        Override the save method to handle logo upload to Supabase and HTML template file storage.
         """
         instance = super(GameAdminForm, self).save(commit=False)
         upload_logo = self.cleaned_data.get('upload_logo')
+        upload_html = self.cleaned_data.get('upload_html')
 
+        # Handle logo upload to Supabase
         if upload_logo:
             try:
                 # Read the content of the uploaded file
@@ -103,10 +107,37 @@ class GameAdminForm(forms.ModelForm):
             except Exception as e:
                 print(f"An error occurred while uploading the logo: {e}")
 
+        # Handle HTML file upload to the templates directory
+        if upload_html:
+            try:
+                self.save_html_file(upload_html, instance)  # Save the uploaded HTML file
+            except Exception as e:
+                print(f"An error occurred while saving the HTML file: {e}")
+
         if commit:
             instance.save()
         return instance
 
+    def save_html_file(self, upload_html, instance):
+        """
+        Save the uploaded HTML file to the templates directory.
+        """
+        # Ensure the templates/games directory exists
+        templates_path = os.path.join(settings.BASE_DIR, 'templates/games')
+        os.makedirs(templates_path, exist_ok=True)
+
+        # File name for the HTML file
+        file_name = f"game_{instance.gameID}.html"
+        file_path = os.path.join(templates_path, file_name)
+
+        # Save the uploaded file content to the desired location
+        with open(file_path, 'wb') as f:
+            for chunk in upload_html.chunks():
+                f.write(chunk)
+
+        # Save the template name in the model instance
+        instance.template_name = f"games/{file_name}"
+        print(f"HTML file uploaded successfully to: {file_path}")
 
 # Admin class for managing GameType
 class GameTypeAdmin(admin.ModelAdmin):
@@ -117,12 +148,11 @@ class GameTypeAdmin(admin.ModelAdmin):
 # Admin class for managing Game with related questions
 class GameAdmin(admin.ModelAdmin):
     form = GameAdminForm  # Use the custom form for Game
-    list_display = ('gameID', 'title', 'type', 'thumbnail_url', 'status', 'free')  # Display game details
+    list_display = ('gameID', 'title', 'type', 'thumbnail_url', 'status', 'free', 'template_name')  # Display template name
     list_filter = ('status', 'free', 'type')  # Enable filtering by status, free, and type
     search_fields = ('title', 'type__type_name')  # Enable search by title or type name
-    fields = ('title', 'type', 'description', 'status', 'questions', 'free', 'upload_logo')  # Fields to include in the form
-    readonly_fields = ('thumbnail_url',)  # Make thumbnail preview readonly
-
+    fields = ('title', 'type', 'description', 'status', 'questions', 'free', 'upload_logo', 'upload_html')  # Fields to include in the form
+    readonly_fields = ('thumbnail_url', 'template_name')  # Make some fields readonly
 
 # Admin class for managing ChildGame records (optional)
 class ChildGameAdmin(admin.ModelAdmin):
@@ -135,4 +165,4 @@ class ChildGameAdmin(admin.ModelAdmin):
 admin.site.register(GameType, GameTypeAdmin)
 admin.site.register(Game, GameAdmin)
 admin.site.register(GameQuestion, GameQuestionAdmin)
-admin.site.register(ChildGame, ChildGameAdmin)
+

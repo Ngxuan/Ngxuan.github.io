@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 <style>
+  /* Existing CSS Styles */
   body {
     font-family: 'Arial', sans-serif;
     position: relative;
@@ -17,275 +18,314 @@
     padding: 0;
     height: 100%;
     overflow-x: hidden;
-}
+  }
 
-/* Page Title Styling */
-.library-title {
-    font-size: 48px;
-    color: #ffd700;
-    font-family: 'Super Dessert', sans-serif;
-}
+  /* Page Title Styling */
+  .library-title {
+      font-size: 48px;
+      color: #ffd700;
+      font-family: 'Super Dessert', sans-serif;
+  }
 
-/* Back Arrow Styles */
-.back-button {
-    font-size: 30px;
-    color: #000;
-    position: absolute;
-    top: 20px; /* Adjust position to match design */
-    left: 50px; /* Adjust position to match design */
-    text-decoration: none;
-    z-index: 1000; /* Ensure it stays on top */
-    transition: color 0.3s ease;
-}
+  /* Back Arrow Styles */
+  .back-button {
+      font-size: 30px;
+      color: #000;
+      position: absolute;
+      top: 20px; /* Adjust position to match design */
+      left: 50px; /* Adjust position to match design */
+      text-decoration: none;
+      z-index: 1000; /* Ensure it stays on top */
+      transition: color 0.3s ease;
+  }
 
-.back-button:hover {
-    color: #ffd700; /* Change color on hover */
-}
+  .back-button:hover {
+      color: #ffd700; /* Change color on hover */
+  }
 
-/* Card Styles */
-.card {
-    width: 360px; /* Adjust the width */
-    height: auto; /* Adjust the height */
-    border: none;
-    transition: transform 0.2s ease;
-    margin: 0 20px;
-}
-.card img {
-    width: 100%; /* Set the width to match the card */
-    height: 200px; /* Set a fixed height */
+  /* Card Styles */
+  .card {
+      width: 360px; /* Adjust the width */
+      height: auto; /* Adjust the height */
+      border: none;
+      transition: transform 0.2s ease;
+      margin: 0 20px;
+  }
+  .card img {
+      width: 100%; /* Set the width to match the card */
+      height: 170px; /* Set a fixed height */
+  }
 
-}
+  .cardContainer {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-start; /* Align cards to the left */
+      align-items: flex-start; /* Align cards to the top */
+  }
 
-.cardContainer {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start; /* Align cards to the left */
-    align-items: flex-start; /* Align cards to the top */
+  .card:hover {
+      transform: scale(1.05);
+  }
 
-}
+  .card-title {
+      font-size: 18px;
+      text-align: center;
+      color: #333;
+  }
 
-.card:hover {
-    transform: scale(1.05);
-}
+  /* Specific CSS styles for achievement cards */
+  .achievement-card {
+      display: flex;
+      align-items: center;
+      justify-content: start;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin: 20px;
+      padding:20px;
+      background-color: #ffffff;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease;
+      width: 350px; /* Define a fixed width for consistency */
+  }
 
-.card-title {
-    font-size: 18px;
-    text-align: center;
-    color: #333;
-}
+  .achievement-container {
+      display: flex;
+      align-items: center;
+      min-height:150px;
+  }
 
-/* Specific CSS styles for achievement cards */
-.achievement-card {
-    display: flex;
-    align-items: center;
-    justify-content: start;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    margin: 20px;
-    padding:20px;
-    background-color: #ffffff;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s ease;
-    width: 350px; /* Define a fixed width for consistency */
-}
+  .achievement-badge {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      margin-right: 15px;
+  }
 
-.achievement-container {
-    display: flex;
-    align-items: center;
-    min-height:150px;
-}
+  .achievement-details {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+  }
 
-.achievement-badge {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    margin-right: 15px;
-}
+  .achievement-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 20 20;
+      color: #333;
+  }
 
-.achievement-details {
-    display: flex;
-    flex-direction: column;
-    text-align: left;
-}
+  .achievement-description {
+      font-size: 14px;
+      margin: 5px 0 0;
+      color: #666;
+  }
 
-.achievement-title {
-    font-size: 18px;
-    font-weight: bold;
-    margin: 20 20;
-    color: #333;
-}
+  .completion-percentage{
+     margin: 5px 0 0;
+  }
 
-.achievement-description {
-    font-size: 14px;
-    margin: 5px 0 0;
-    color: #666;
-}
+  /* Locked Achievements */
+  .locked-achievement {
+      opacity: 0.2; /* Reduce opacity for locked achievements */
+      background: #f0f0f0; /* Light gray background for locked achievements */
+  }
 
-.completion-percentage{
-   margin: 5px 0 0;
-}
+  .locked-achievement .achievement-title,
+  .locked-achievement .achievement-description {
+      color: #999; /* Gray text for locked achievements */
+  }
 
-/* Locked Achievements */
-.locked-achievement {
-    opacity: 0.2; /* Reduce opacity for locked achievements */
-    background: #f0f0f0; /* Light gray background for locked achievements */
-}
+  /* Bubble Navigation Styles */
+  .bubble-container {
+      text-align: center;
+  }
 
-.locked-achievement .achievement-title,
-.locked-achievement .achievement-description {
-    color: #999; /* Gray text for locked achievements */
-}
+  .bubble {
+      width: 110px;
+      height: 110px;
+      background-color: rgba(173, 216, 230, 0.5); /* Light blue with some transparency */
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Bubble shadow effect */
+      position: relative;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+  }
 
+  .bubble::before {
+      content: '';
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      width: 30px;
+      height: 30px;
+      background-color: rgba(255, 255, 255, 0.6); /* Light reflection */
+      border-radius: 50%;
+  }
 
-/* Bubble Navigation Styles */
-.bubble-container {
-    text-align: center;
-}
+  .bubble-label {
+      margin-top: 10px;
+      font-size: 18px;
+      color: grey;
+      padding: 5px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      font-weight: bold;
+      text-align: center;
+  }
 
-.bubble {
-    width: 110px;
-    height: 110px;
-    background-color: rgba(173, 216, 230, 0.5); /* Light blue with some transparency */
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Bubble shadow effect */
-    position: relative;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
+  .bubble.active {
+      background-color: #ffd700 !important; /* Yellow when clicked */
+  }
 
-.bubble::before {
-    content: '';
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    width: 30px;
-    height: 30px;
-    background-color: rgba(255, 255, 255, 0.6); /* Light reflection */
-    border-radius: 50%;
-}
+  .bubble-label.active {
+      background-color: grey; /* Grey background */
+      color: white; /* White text */
+      border-radius: 5px;
+  }
 
-.bubble-label {
-    margin-top: 10px;
-    font-size: 18px;
-    color: grey;
-    padding: 5px;
-    transition: background-color 0.3s ease, color 0.3s ease;
-    font-weight: bold;
-    text-align: center;
-}
+  .bubble img {
+      width: 50px;
+      height: 50px;
+  }
 
-.bubble.active {
-    background-color: #ffd700 !important; /* Yellow when clicked */
-}
+  /* Flexbox layout with adjustable gap */
+  .d-flex {
+      gap: 10%; /* Adjust the space between bubbles */
+      justify-content: center; /* Center the bubbles horizontally */
+  }
 
-.bubble-label.active {
-    background-color: grey; /* Grey background */
-    color: white; /* White text */
-    border-radius: 5px;
-}
+  /* Arrow Button Styles */
+  .nav-button {
+      position: fixed;
+      top: 50%;
+      background: #17a2b8;
+      border: none;
+      border-radius: 50%;
+      padding: 15px;
+      cursor: pointer;
+      z-index: 1000;
+      transition: background 0.3s, transform 0.3s;
+  }
 
-.bubble img {
-    width: 50px;
-    height: 50px;
-}
+  .nav-button img {
+      width: 40px;
+      height: 40px;
+  }
 
-/* Flexbox layout with adjustable gap */
-.d-flex {
-    gap: 10%; /* Adjust the space between bubbles */
-    justify-content: center; /* Center the bubbles horizontally */
-}
+  #prevPageButton {
+      left: 20px; /* Fixed on the left side */
+  }
 
-/* Arrow Button Styles */
-.nav-button {
-    position: fixed;
-    top: 50%;
-    background: #17a2b8;
-    border: none;
-    border-radius: 50%;
-    padding: 15px;
-    cursor: pointer;
-    z-index: 1000;
-    transition: background 0.3s, transform 0.3s;
-}
+  #nextPageButton {
+      right: 20px; /* Fixed on the right side */
+  }
 
-.nav-button img {
-    width: 40px;
-    height: 40px;
-}
+  .nav-button:hover {
+      background: #138496;
+      transform: scale(1.1);
+  }
 
-#prevPageButton {
-    left: 20px; /* Fixed on the left side */
-}
+  .home-button {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: #17a2b8;
+      border: none;
+      border-radius: 50%;
+      padding: 20px;
+      cursor: pointer;
+      z-index: 1000;
+      transition: background 0.3s, transform 0.3s;
+  }
 
-#nextPageButton {
-    right: 20px; /* Fixed on the right side */
-}
+  .home-button:hover {
+      background: #138496;
+      transform: scale(1.1);
+  }
 
-.nav-button:hover {
-    background: #138496;
-    transform: scale(1.1);
-}
+  .home-button img {
+      width: 30px;
+      height: 30px;
+  }
 
-        .home-button {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: #17a2b8;
-            border: none;
-            border-radius: 50%;
-            padding: 10px;
-            cursor: pointer;
-            z-index: 1000;
-            transition: background 0.3s, transform 0.3s;
-        }
+  /* Media queries for smaller screens */
+  @media (max-width: 768px) {
+      .bubble {
+          width: 120px; /* Decrease size of bubbles for smaller screens */
+          height: 120px;
+      }
+      .library-title {
+          font-size: 36px; /* Make the title smaller on smaller screens */
+      }
+  }
 
-        .home-button:hover {
-            background: #138496;
-            transform: scale(1.1);
-        }
+  @media (max-width: 576px) {
+      .bubble {
+          width: 100px; /* Further reduce size for very small screens */
+          height: 100px;
+      }
+      .library-title {
+          font-size: 28px; /* Further reduce the title size */
+      }
+      .d-flex {
+          gap: 20px; /* Reduce gap for smaller screens */
+      }
+  }
+  .video-container {
+      display: none; /* Hide the video feed */
+  }
 
-        .home-button img {
-            width: 30px;
-            height: 30px;
-        }
+  /* Modal Styles (optional customization) */
+  .modal-content {
+      border-radius: 15px;
+  }
+      /* **New CSS for Instruction Icon** */
+      .instruction-icon {
+          position: fixed;
+          bottom: 20px;
+          right: 50px;
+          background-color: #17a2b8;
+          color: white;
+          border: none;
+          border-radius: 50%;
+          width: 60px;
+          height: 60px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+          cursor: pointer;
+          z-index: 1001; /* Above other elements */
+          transition: background-color 0.3s ease, transform 0.3s ease;
+      }
 
+      .instruction-icon:hover {
+          background-color: #138496;
+          transform: scale(1.1);
+      }
 
-/* Media queries for smaller screens */
-@media (max-width: 768px) {
-    .bubble {
-        width: 120px; /* Decrease size of bubbles for smaller screens */
-        height: 120px;
-    }
-    .library-title {
-        font-size: 36px; /* Make the title smaller on smaller screens */
-    }
-}
+      .instruction-icon i {
+          font-size: 24px;
+      }
+      /* **End of New CSS** */
 
-@media (max-width: 576px) {
-    .bubble {
-        width: 100px; /* Further reduce size for very small screens */
-        height: 100px;
-    }
-    .library-title {
-        font-size: 28px; /* Further reduce the title size */
-    }
-    .d-flex {
-        gap: 20px; /* Reduce gap for smaller screens */
-    }
-}
+      /* Adjust Close Button in Modal */
+      .modal-header {
+          display: flex;
+          justify-content: flex-end; /* Align close button to the right */
+      }
 </style>
 <body>
     <div class="container mt-2">
         <!-- Header -->
 
-         <a href="{% url 'choose_profile' %}" class="home-button">
-            <button style="background: transparent; border: none;">
+
+           <button class="home-button" onclick="redirectToProfilePage()">
                 <img src="https://img.icons8.com/material-rounded/24/ffffff/home.png" alt="Home">
             </button>
-        </a>
+
         <div class="text-center">
             <h1 class="library-title">Library</h1>
         </div>
@@ -340,8 +380,34 @@
     <button id="nextPageButton" class="nav-button">
         <img src="https://img.icons8.com/material-rounded/48/ffffff/right.png" alt="Next">
     </button>
+        <div class="video-container">
+            <!-- Load video feed from the video_feed endpoint -->
+            <img src="{% url 'video_feed' %}" alt="Real-time Video Feed">
+        </div>
 
-    <script>
+    <!-- Instruction Modal -->
+    <div class="modal fade" id="instructionModal" tabindex="-1" aria-labelledby="instructionModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <!-- Modal Header with Close Button -->
+          <div class="modal-header">
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <!-- Modal Body with Instruction Image and Text -->
+          <div class="modal-body text-center">
+            <img src="{% static 'image/homepageInstruction.png' %}" alt="Gesture Instructions" class="img-fluid">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- **New Instruction Icon Button** -->
+    <button class="instruction-icon" id="instructionIcon" aria-label="Show Instructions">
+        <i class="fa fa-info-circle"></i>
+    </button>
+    <!-- **End of New Instruction Icon Button** -->
+
+      <script>
 // Function to toggle active class and filter content
 function toggleActive(element, category) {
     var bubbles = document.querySelectorAll('.bubble');
@@ -357,11 +423,19 @@ function toggleActive(element, category) {
     }
     currentPage = 1;  // Reset to first page when a new category is selected
     filterContent(category);
+
+
+    localStorage.setItem('selectedCategory', category);
 }
+
 
 // Global variables for pagination
 let currentPage = 1;  // Track current page
 const itemsPerPage = 6;  // Number of items to show per page
+let isWatchingVideo = false;
+let state = {}
+let currentCategory = 'book'; // Initialize currentCategory
+
 
 // Function to fetch and filter content based on category and paginate
 function filterContent(category) {
@@ -571,22 +645,24 @@ function handleNextPageClick() {
 
 // Function to open the book viewer in a new page
 function openBookViewer(bookUrl, childID, eduMaterialID) {
-    window.location.href = `/eduMaterial/book/${childID}/${eduMaterialID}/?bookUrl=${encodeURIComponent(bookUrl)}`;
+    const encodedBookUrl = encodeURIComponent(bookUrl);
+    window.location.href = `/eduMaterial/book/${childID}/${eduMaterialID}/?bookUrl=${encodedBookUrl}&show_instructions=true`;
 }
+
 function openQuizPage(childID, quizID) {
-    window.location.href = `/quizzes/quiz/${childID}/${quizID}/`;
+    window.location.href = `/quizzes/quiz/${childID}/${quizID}?show_instructions=true`;
 }
 function openGamePage(childID, gameID) {
     // Construct the URL to the game page with the necessary parameters in the correct order
-    const gamePageUrl = `/games/play/${childID}/${gameID}`;
+    const gamePageUrl = `/games/play/${childID}/${gameID}?show_instructions=true`;
 
     // Redirect or open the game page
     window.location.href = gamePageUrl;
 }
-// Function to play video in full screen (for videos)
 
-// Function to play video in full screen (for videos)
-function playVideoInFullScreen(videoUrl, childID, eduMaterialID) {  // Include childID and eduMaterialID as parameters
+
+
+function playVideoInFullScreen(videoUrl, childID, eduMaterialID) {
     const videoElement = document.createElement('video');
     videoElement.src = videoUrl;
     videoElement.controls = true;
@@ -594,43 +670,48 @@ function playVideoInFullScreen(videoUrl, childID, eduMaterialID) {  // Include c
 
     document.body.appendChild(videoElement);
 
-    // Variables to track time spent
-    let startTime = 0;
-    let accumulatedTime = 0;
-    let interval;
+    state = {
+        startTime: 0,
+        accumulatedTime: 0,
+        interval: null,
+        videoElement,
+        childID,
+        eduMaterialID,
+    };
+
+    isWatchingVideo = true;
 
     // Event listener to start tracking when the video starts playing
     videoElement.addEventListener('play', () => {
-        startTime = Date.now();  // Record the start time
-        interval = setInterval(updateTimeSpent, 1000); // Update time every second
+        state.startTime = Date.now();
+        state.interval = setInterval(() => updateTimeSpent(state), 1000);
     });
 
     // Event listener to stop tracking when the video is paused
     videoElement.addEventListener('pause', () => {
-        if (startTime) {
-            accumulatedTime += Date.now() - startTime; // Add the difference to accumulatedTime
-            startTime = 0;  // Reset start time
-            clearInterval(interval);  // Stop updating the time
+        if (state.startTime) {
+            state.accumulatedTime += Date.now() - state.startTime;
+            state.startTime = 0;
+            clearInterval(state.interval);
         }
     });
 
     // Event listener to stop tracking when the video ends
     videoElement.addEventListener('ended', () => {
-        if (startTime) {
-            accumulatedTime += Date.now() - startTime;  // Add the remaining time when video ends
-            clearInterval(interval);  // Stop updating the time
-            sendTimeSpent(childID, eduMaterialID, accumulatedTime / 1000);  // Convert milliseconds to seconds and send
-            startTime = 0;
+        if (state.startTime) {
+            state.accumulatedTime += Date.now() - state.startTime;
+            clearInterval(state.interval);
+            sendTimeSpent(state.childID, state.eduMaterialID, state.accumulatedTime / 1000);
+            state.startTime = 0;
         }
-        removeVideoElement(videoElement);  // Remove the video element from the DOM
+        removeVideoElement(state.videoElement);
     });
 
-    // Event listener to handle when the video enters full screen and starts playing
+    // Event listener to handle when the video enters full screen
     videoElement.addEventListener('loadedmetadata', () => {
         videoElement.style.display = 'block';
-        videoElement.play();  // Play the video automatically
+        videoElement.play();
 
-        // Request full screen depending on the browser support
         if (videoElement.requestFullscreen) {
             videoElement.requestFullscreen();
         } else if (videoElement.mozRequestFullScreen) {
@@ -642,106 +723,281 @@ function playVideoInFullScreen(videoUrl, childID, eduMaterialID) {  // Include c
         }
     });
 
-    // Add event listeners to track when exiting full screen
-    document.addEventListener('fullscreenchange', () => handleExitFullscreen(childID, eduMaterialID));
-    document.addEventListener('webkitfullscreenchange', () => handleExitFullscreen(childID, eduMaterialID));
-    document.addEventListener('mozfullscreenchange', () => handleExitFullscreen(childID, eduMaterialID));
-    document.addEventListener('MSFullscreenChange', () => handleExitFullscreen(childID, eduMaterialID));
+    document.addEventListener('fullscreenchange', () => handleExitFullscreen(state));
+    document.addEventListener('webkitfullscreenchange', () => handleExitFullscreen(state));
+    document.addEventListener('mozfullscreenchange', () => handleExitFullscreen(state));
+    document.addEventListener('MSFullscreenChange', () => handleExitFullscreen(state));
+}
 
-    // Function to remove the video element from the DOM
-    function removeVideoElement(videoElement) {
-        if (document.body.contains(videoElement)) {
-            document.body.removeChild(videoElement);
+// Function to remove the video element from the DOM
+function removeVideoElement(videoElement) {
+    if (document.body.contains(videoElement)) {
+        document.body.removeChild(videoElement);
+    }
+}
+
+function handleExitFullscreen(state) {
+    console.log("handleExitFullscreen triggered");
+
+    // Check if the document is no longer in full-screen mode
+    if (
+        !document.fullscreenElement &&
+        !document.webkitFullscreenElement &&
+        !document.mozFullScreenElement &&
+        !document.msFullscreenElement
+    ) {
+        // If the video is playing, record the time spent
+        if (state.startTime) {
+            state.accumulatedTime += Date.now() - state.startTime;
+            clearInterval(state.interval);
+            sendTimeSpent(state.childID, state.eduMaterialID, state.accumulatedTime / 1000);  // Send to server
+            state.startTime = 0;
+            console.log("Time recorded successfully.");
         }
+
+        // Optionally remove the video element from the DOM
+        removeVideoElement(state.videoElement);
+    }
+}
+
+
+// Function to send time spent on the video to the server
+function sendTimeSpent(childID, eduMaterialID, timeSpentInSeconds) {
+    if (!eduMaterialID) {
+        console.error("eduMaterialID is missing or incorrect.");
+        return;
     }
 
-    // Function to handle exiting full screen and recording time spent
-    function handleExitFullscreen(childID, eduMaterialID) {
-        if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
-            if (startTime) {
-                accumulatedTime += Date.now() - startTime;  // Add remaining time when exiting full screen
-                clearInterval(interval);  // Stop updating the time
-                sendTimeSpent(childID, eduMaterialID, accumulatedTime / 1000);  // Convert milliseconds to seconds and send
-                startTime = 0;
-            }
-            removeVideoElement(videoElement);  // Remove the video element from the DOM
-        }
-    }
+    console.log(`Child ID: ${childID}, EduMaterial ID: ${eduMaterialID}`);
 
-    // Function to send time spent on the video to the server
-    function sendTimeSpent(childID, eduMaterialID, timeSpentInSeconds) {
-        if (!eduMaterialID) {
-            console.error("eduMaterialID is missing or incorrect.");
-            return;
-        }
-
-        console.log(`Child ID: ${childID}, EduMaterial ID: ${eduMaterialID}`); // Log IDs to check for correctness
-
-        // Send the time spent to the server using AJAX
-        fetch(`/eduMaterial/record_time_spent/${childID}/${eduMaterialID}/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCSRFToken(),  // Add CSRF token if required
-            },
-            body: JSON.stringify({
-                timeSpent: timeSpentInSeconds
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
+    fetch(`/eduMaterial/record_time_spent/${childID}/${eduMaterialID}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken(),
+        },
+        body: JSON.stringify({
+            timeSpent: timeSpentInSeconds,
+        }),
+    })
+        .then((response) => response.json())
+        .then((data) => {
             if (data.status === 'success') {
                 console.log('Time spent recorded successfully.');
             } else {
                 console.error('Failed to record time spent:', data.message);
             }
         })
-        .catch(error => {
+        .catch((error) => {
             console.error('Error recording time spent:', error);
         });
-    }
+}
 
-    // Function to get CSRF token from cookie (if needed)
-    function getCSRFToken() {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, 'csrftoken'.length + 1) === 'csrftoken=') {
-                    cookieValue = decodeURIComponent(cookie.substring('csrftoken'.length + 1));
-                    break;
-                }
+// Function to get CSRF token from cookies
+function getCSRFToken() {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, 'csrftoken'.length + 1) === 'csrftoken=') {
+                cookieValue = decodeURIComponent(cookie.substring('csrftoken'.length + 1));
+                break;
             }
         }
-        return cookieValue;
     }
+    return cookieValue;
+}
 
-    // Function to continuously update the accumulated time
-    function updateTimeSpent() {
-        if (startTime) {
-            const currentTime = Date.now();
-            const timeSpentInMilliseconds = currentTime - startTime;  // Calculate time spent since the last update
-            accumulatedTime += timeSpentInMilliseconds;  // Add to accumulated time
-            startTime = currentTime;  // Reset start time for the next calculation
-            console.log(`Time spent so far: ${accumulatedTime / 1000} seconds`);  // Log for debugging
-        }
+// Function to continuously update the accumulated time
+function updateTimeSpent(state) {
+    if (state.startTime) {
+        const currentTime = Date.now();
+        const timeSpentInMilliseconds = currentTime - state.startTime;
+        state.accumulatedTime += timeSpentInMilliseconds;
+        state.startTime = currentTime;
+        console.log(`Time spent so far: ${state.accumulatedTime / 1000} seconds`);
     }
 }
 
-// Set default active category and pagination on page load
-window.onload = function() {
-    const defaultBubble = document.querySelector('.bubble.active');
-    if (defaultBubble) {
-        currentPage = 1;  // Reset to page 1 on new category selection
-        toggleActive(defaultBubble, 'book');
+function exitVideoFullScreen(state) {
+    console.log('Exiting full screen:');
+    console.log('childID:', state.childID);
+    console.log('eduMaterialID:', state.eduMaterialID);
+
+    // Exit full-screen mode using the appropriate browser API
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+    } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+    }
+
+    // Optionally pause the video
+    if (state.videoElement && !state.videoElement.paused) {
+        state.videoElement.pause();
+        console.log('Video paused.');
+    }
+
+    // If the video is still playing (and we have a valid start time), update accumulated time
+    if (state.startTime) {
+        state.accumulatedTime += Date.now() - state.startTime;
+        console.log('Accumulated time updated:', state.accumulatedTime);
+        sendTimeSpent(state.childID, state.eduMaterialID, state.accumulatedTime / 1000);  // Send to server in seconds
+        state.startTime = 0;  // Reset the start time after recording
+        isWatchingVideo = false;  // Update status
+    } else {
+        console.log('No video start time found.');
+    }
+
+    // Optionally remove the video element from the DOM
+    if (state.videoElement) {
+        removeVideoElement(state.videoElement);
+        console.log('Video element removed from DOM.');
+    }
+
+    // Handle exit full-screen logic (e.g., cleanup or resetting state)
+    handleExitFullscreen(state);
+}
+
+
+  window.onload = function() {
+    // Retrieve the stored category from localStorage
+    const storedCategory = localStorage.getItem('selectedCategory');
+
+    // Determine which category to activate
+    let categoryToActivate = 'book'; // Default category
+    if (storedCategory) {
+        categoryToActivate = storedCategory;
+    }
+
+    // Find the bubble corresponding to the category to activate
+    const bubbleToActivate = document.querySelector(`.bubble[onclick="toggleActive(this, '${categoryToActivate}')"]`);
+
+    if (bubbleToActivate) {
+        currentPage = 1;  // Reset to page 1 on category selection
+        toggleActive(bubbleToActivate, categoryToActivate);
+    } else {
+        // Fallback to the default bubble if the stored category doesn't exist
+        const defaultBubble = document.querySelector('.bubble.active');
+        if (defaultBubble) {
+            toggleActive(defaultBubble, 'book');
+        }
     }
 
     // Attach click event listeners to pagination buttons
     document.getElementById('prevPageButton').addEventListener('click', handlePreviousPageClick);
     document.getElementById('nextPageButton').addEventListener('click', handleNextPageClick);
+
+    // **Handle Instruction Modal Display Based on URL Parameter**
+    // Check if the URL has show_instructions=true
+    const urlParams = new URLSearchParams(window.location.search);
+    const showInstructions = urlParams.get('show_instructions');
+
+    if (showInstructions === 'true') {
+        // Initialize and show the instruction modal
+        var instructionModal = new bootstrap.Modal(document.getElementById('instructionModal'), {
+            backdrop: 'static', // Disable closing by clicking outside
+            keyboard: false     // Disable closing with keyboard
+        });
+        instructionModal.show();
+
+        // Remove the 'show_instructions' parameter from the URL
+        const url = new URL(window.location);
+        url.searchParams.delete('show_instructions');
+        window.history.replaceState({}, document.title, url.pathname + url.search);
+    }
+
+    // **Attach Click Event to Instruction Icon**
+    const instructionIcon = document.getElementById('instructionIcon');
+    if (instructionIcon) {
+        instructionIcon.addEventListener('click', function() {
+            var instructionModal = new bootstrap.Modal(document.getElementById('instructionModal'), {
+                backdrop: 'static', // Optional: Prevent closing by clicking outside
+                keyboard: false     // Optional: Prevent closing with keyboard
+            });
+            instructionModal.show();
+        });
+    }
+
 };
 
+const GESTURE_CLASSES = {
+    NEXT: 7,                 // 'H' Gesture (Next)
+    PREVIOUS: 6,             // 'G' Gesture (Previous)
+    CLOSE_INSTRUCTION: 5     // 'E' Gesture (Close Instruction)
+};
+
+// Function to fetch gesture class from the backend
+function getGestureClassFromBackend() {
+    fetch("{% url 'get_last_gesture' %}")  // URL for your Django view
+        .then(response => response.json())
+        .then(data => {
+            const detectedClass = data.gesture_class;
+            checkAndTriggerAction(detectedClass);  // Trigger the appropriate action
+        })
+        .catch(error => {
+            console.error("Error fetching gesture class:", error);
+        });
+}
+
+// Function to trigger actions based on the detected class
+
+function checkAndTriggerAction(detectedClass) {
+    console.log("Detected class:", detectedClass);  // Debugging log
+
+    // Ensure that detectedClass is an integer
+    const detectedClassInt = parseInt(detectedClass, 10);
+
+    // Compare against numeric values for Next and Previous gestures
+    if (detectedClassInt === GESTURE_CLASSES.NEXT) {
+        console.log("Detected Next Gesture: Class 7");
+        handleNextPageClick();
+    } else if (detectedClassInt === GESTURE_CLASSES.PREVIOUS) {
+        console.log("Detected Previous Gesture: Class 6");
+        handlePreviousPageClick();
+    }else if (detectedClass === 8) {
+        handleClass8Action(state);  // Handle Class 8 action
+        console.log("callClass8");
+    } else if (detectedClassInt === GESTURE_CLASSES.CLOSE_INSTRUCTION) {
+        console.log("Detected Close Instruction Gesture: Class 5");
+        closeInstructionModal();  // Function to close the instruction modal
+    }
+}
+
+
+function handleClass8Action(state) {
+console.log("Class 8 State received:", state);
+    if (isWatchingVideo) {
+        // Exit full-screen if the user is watching a video
+        exitVideoFullScreen(state);
+        console.log("exitFullScreen");
+    } else if (!isWatchingVideo) {
+        // If not watching a video, redirect to the profile page
+        redirectToProfilePage();
+        console.log("redirectToProfilePage");
+    }
+}
+
+// Helper function to redirect to the profile page
+function redirectToProfilePage() {
+    localStorage.removeItem('selectedCategory');
+    window.location.href = '{% url "choose_profile" %}'; // Redirect to 'choose_profile' URL
+}
+// Function to close the instruction modal
+function closeInstructionModal() {
+    var instructionModalElement = document.getElementById('instructionModal');
+    var instructionModal = bootstrap.Modal.getInstance(instructionModalElement);
+    if (instructionModal) {
+        instructionModal.hide();
+    }
+}
+
+// Call the function to fetch the gesture class periodically (e.g., every second)
+setInterval(getGestureClassFromBackend, 4000);
     </script>
 
 

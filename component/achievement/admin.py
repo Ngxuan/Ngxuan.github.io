@@ -103,12 +103,7 @@ class AchievementAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 
-# Admin class for ChildAchievement
-class ChildAchievementAdmin(admin.ModelAdmin):
-    list_display = ('child', 'achievement', 'complete')  # Display these fields
-    list_filter = ('complete',)  # Filter options for completion status
-    search_fields = ('child__name', 'achievement__title')  # Allow searching by child's name and achievement title
 
 
 admin.site.register(Achievement, AchievementAdmin)
-admin.site.register(ChildAchievement, ChildAchievementAdmin)
+

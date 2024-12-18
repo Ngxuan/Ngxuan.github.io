@@ -6,6 +6,7 @@
     <title>Parent Dashboard</title>
     {% load static %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
         body, html {
             margin: 0;
@@ -135,68 +136,95 @@
             margin-top: 0;
         }
 
-        .child-list, .game-list, .purchased-game-list {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: flex-start;
-        }
+.child-list, .game-list, .purchased-game-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
 
-        .child-item, .game-item, .purchased-game-item {
-            width: 120px;
-            margin: 10px;
-            text-align: center;
-        }
+.child-item, .game-item, .purchased-game-item {
+    width: 120px;
+    margin: 10px;
+    text-align: center;
+    position: relative; /* Added to position the delete icon absolutely */
+}
 
-        .child-item img, .game-item img, .purchased-game-item img {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 50%;
-            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2);
-        }
+.child-item img, .game-item img, .purchased-game-item img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 50%;
+    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, background-color 0.3s ease; /* Added transition for smooth effect */
+}
 
-        .child-item img:hover, .game-item img:hover, .purchased-game-item img:hover {
-            transform: scale(1.05);
-            background-color: #eaeaea;
-        }
+.child-item img:hover, .game-item img:hover, .purchased-game-item img:hover {
+    transform: scale(1.05);
+    background-color: #eaeaea;
+}
 
-        .child-item .name, .game-item .name, .purchased-game-item .name {
-            margin-top: 10px;
-            font-weight: bold;
-            color: black;
-        }
+.child-item .name, .game-item .name, .purchased-game-item .name {
+    margin-top: 10px;
+    font-weight: bold;
+    color: black;
+}
 
-        a {
-            text-decoration: none;
-        }
+a {
+    text-decoration: none;
+}
 
-        /* Styling for the Add Child Button */
-        .child-item.add-child {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 110px;
-            height: 110px;
-            cursor: pointer;
-            border: 2px dashed #ccc;
-            border-radius: 50%;
-            box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-            text-decoration: none;
-            color: #666;
-            background-color: #f9f9f9;
-        }
+/* Styling for the Add Child Button */
+.child-item.add-child {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 110px;
+    height: 110px;
+    cursor: pointer;
+    border: 2px dashed #ccc;
+    border-radius: 50%;
+    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+    text-decoration: none;
+    color: #666;
+    background-color: #f9f9f9;
+}
 
-        .child-item.add-child:hover {
-            transform: scale(1.05);
-            background-color: #eaeaea;
-        }
+.child-item.add-child:hover {
+    transform: scale(1.05);
+    background-color: #eaeaea;
+}
 
-        .child-item.add-child i {
-            font-size: 40px;
-            color: #666;
-        }
+.child-item.add-child i {
+    font-size: 40px;
+    color: #666;
+}
+
+/* Delete Icon Styling */
+.delete-icon {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 20px;
+    color: red;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    padding: 5px;
+    cursor: pointer;
+    display: none; /* Hidden by default */
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.child-item:hover .delete-icon {
+    display: block; /* Show when hovering over child-item */
+}
+
+.delete-icon:hover {
+    background-color: rgba(255, 0, 0, 0.1);
+    transform: scale(1.2);
+}
+
 
         .price-tag {
             background-color: rgba(217, 217, 217, 0.51);
@@ -295,16 +323,17 @@
             <div class="child-list">
                 {% if children %}
                     {% for child in children %}
-                        <div class="child-item">
+                        <div class="child-item" data-child-id="{{ child.childID }}">
                            <a href="{% url 'child_detail' child_id=child.childID %}">
                                 {% if child.image %}
-                                    <img src="{% if child.image %}{{ child.image }}{% else %}{% static 'image/childProfile.png' %}{% endif %}" alt="{{ child.name }}" class="profile-image">
-
+                                    <img src="{{ child.image }}" alt="{{ child.name }}" class="profile-image">
                                 {% else %}
                                     <img src="{% static 'image/childProfile.png' %}" alt="Default Image">
                                 {% endif %}
                                 <div class="name">{{ child.name }}</div>
                             </a>
+                            <!-- Delete Icon -->
+                            <i class="fa fa-minus delete-icon" title="Delete Child"></i>
                         </div>
                     {% endfor %}
                 {% endif %}
@@ -359,6 +388,7 @@
 
 
     </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         // JavaScript to toggle dropdown menu on profile container click
         document.querySelector('.profile-container').addEventListener('click', function() {
@@ -374,6 +404,64 @@
                 dropdownMenu.style.display = 'none';
             }
         });
+
+    // Function to retrieve CSRF token from cookies
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    const csrftoken = getCookie('csrftoken');
+
+    $(document).ready(function() {
+        // Event listener for delete icon click using event delegation
+        $(document).on('click', '.delete-icon', function(e) {
+            e.preventDefault();
+            e.stopPropagation(); // Prevent the click from triggering parent events
+
+            // Get the child-item div
+            const childItem = $(this).closest('.child-item');
+            const childId = childItem.data('child-id');
+
+            // Confirmation dialog
+            if (confirm('Are you sure you want to delete this child account?')) {
+                $.ajax({
+                    url: '{% url "delete_child_account" %}', // Ensure this URL is correct
+                    type: 'POST',
+                    data: {
+                        'child_id': childId,
+                        'csrfmiddlewaretoken': csrftoken
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            alert('Child account deleted successfully.');
+                            // Remove the child item from the DOM with a fade-out effect
+                            childItem.fadeOut(300, function() {
+                                $(this).remove();
+                            });
+                        } else {
+                            alert('Failed to delete the child account: ' + response.error);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                        alert('An error occurred while deleting the child account.');
+                    }
+                });
+            }
+        });
+    });
     </script>
 </body>
 </html>

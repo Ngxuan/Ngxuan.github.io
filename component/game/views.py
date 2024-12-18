@@ -3,7 +3,7 @@ from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from datetime import timedelta
-from .models import Child, Game, ChildGame
+from .models import Child, Game, ChildGame, ChildGameLog
 import uuid
 import json
 
@@ -18,22 +18,16 @@ def play_game(request, child_id, game_id):
     # Prepare the game questions and options, including the correct option ID
     questions_with_options = [
         {
-            'question': question,
+            'question': question.question,
             'options': question.options.all(),
             'correct_option_id': question.options.filter(is_correct=True).first().optionID  # Fetch the correct option ID for each question
         }
         for question in game.questions.all()
     ]
 
-    # Determine which template to use based on the game's type
-    if game.type.type_name == 'drag':
-        template = 'gameDrag.html'
-    elif game.type.type_name == 'matching':
-        template = 'gameMatch.html'
-    elif game.type.type_name == 'Multiple Choice':
-        template = 'multiple_choice.html'
-    else:
-        template = 'default_game_template.html'  # Fallback template for other games
+    # Get the associated template name for the game's type from the database
+    template = game.template_name  # Dynamically retrieve the template name from the GameType model
+
 
     # Render the selected template with the game, child game, and questions context
     context = {
@@ -43,7 +37,6 @@ def play_game(request, child_id, game_id):
         'questions_with_options': questions_with_options,
     }
     return render(request, template, context)
-
 
 @csrf_exempt
 def record_game_time_spent(request, childID, gameID):
@@ -76,6 +69,14 @@ def record_game_time_spent(request, childID, gameID):
             # Save the child game record
             child_game.save()
 
+            # Log the game play into ChildGameLog
+            child_game_log = ChildGameLog.objects.create(
+                childGameLogID=str(uuid.uuid4()),
+                child=child,
+                game=game,
+                time_spent=time_spent_duration
+            )
+
             # Return the total time spent in seconds (converted back from timedelta)
             total_time_spent_seconds = child_game.timeSpent.total_seconds()
             return JsonResponse({'status': 'success', 'totalTimeSpent': total_time_spent_seconds})
@@ -85,6 +86,7 @@ def record_game_time_spent(request, childID, gameID):
 
         except Game.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Game not found'}, status=404)
+
 
 
 def game_detail(request, game_id):

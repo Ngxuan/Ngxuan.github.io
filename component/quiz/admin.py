@@ -78,4 +78,3 @@ class ChildQuizAdmin(admin.ModelAdmin):
 admin.site.register(QuizQuestion, QuizQuestionAdmin)
 admin.site.register(Quiz, QuizAdmin)
 admin.site.register(QuizType, QuizTypeAdmin)  # Register QuizType with its admin class
-admin.site.register(ChildQuiz, ChildQuizAdmin)

@@ -32,11 +32,11 @@ def library(request):
 
     # Determine content based on category
     if category == 'book':
-        filtered_content = EducationalMaterial.objects.filter(type='book')
+        filtered_content = EducationalMaterial.objects.filter(type='book', status=True)
     elif category == 'video':
-        filtered_content = EducationalMaterial.objects.filter(type='video')
+        filtered_content = EducationalMaterial.objects.filter(type='video', status=True)
     elif category == 'quiz':
-        filtered_content = Quiz.objects.all()
+        filtered_content = Quiz.objects.filter(status=True)
     elif category == 'game':
         filtered_content = fetch_games(child_id)
     elif category == 'achievement':
@@ -66,7 +66,7 @@ def fetch_games(child_id):
 
 def fetch_achievements(child_id):
     """Fetch achievements with child's completion status and include formatted criteria if time spent is the metric."""
-    achievements = Achievement.objects.all()
+    achievements = Achievement.objects.filter(status=True)
 
     if child_id:
         child = Child.objects.filter(childID=child_id).first()
