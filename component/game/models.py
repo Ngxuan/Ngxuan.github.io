@@ -45,7 +45,7 @@ class Game(models.Model):
     description = models.TextField(null=True, blank=True)  # Description of the game
     free = models.BooleanField(default=True)  # Indicate if the game is free or not
     status = models.BooleanField(default=True)  # Game status (active or inactive)
-
+    template_name = models.CharField(max_length=200, null=True, blank=True)
 
     questions = models.ManyToManyField(GameQuestion, related_name='quizzes')
     type = models.ForeignKey(GameType, on_delete=models.SET_NULL, null=True, blank=True,
@@ -71,4 +71,11 @@ class ChildGame(models.Model):
     def __str__(self):
         return f"{self.child.name} - {self.game.title}"  # Display child name and game title
 
+
+class ChildGameLog(models.Model):
+    childGameLogID = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
+    access_date = models.DateTimeField(default=timezone.now)  # Automatically set the play date
+    time_spent = models.DurationField()  # Duration field to store time spent on the game
+    child = models.ForeignKey(Child, on_delete=models.CASCADE, related_name='child_games_log')
+    game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name='child_games_log')
 

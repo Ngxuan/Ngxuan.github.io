@@ -16,7 +16,7 @@
 
         body {
             font-family: 'Arial', sans-serif;
-            background-color: rgba(254, 250, 160, 0.19);
+            background-image: url("{% static 'image/yellowBack.jpg' %}");
             text-align: center;
             display: flex;
             flex-direction: column;
@@ -148,7 +148,7 @@
                     <!-- Only display profiles if there is an active subscription or if the count is 3 or less -->
                     {% if active_subscription or forloop.counter <= 3 %}
                         <div class="profile">
-                            <a href="{% url 'child_home' child.childID %}">
+                            <a href="{% url 'child_home' child.childID %}?show_instructions=true">
                                 {% if child.image %}
                                    <img src="{% if child.image %}{{ child.image }}{% else %}{% static 'image/childProfile.png' %}{% endif %}" alt="{{ child.name }}" class="profile-image">
 

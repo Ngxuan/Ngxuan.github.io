@@ -5,8 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz Page</title>
     {% load static %}
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-     <style>
+    <!-- Bootstrap CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/super-dessert" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <style>
         body, html {
             height: 100%;
             margin: 0;
@@ -20,6 +24,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            position: relative; /* To position instruction icon */
         }
 
         .quiz-box {
@@ -50,25 +55,67 @@
             height: 30px;
         }
 
+        /* Instruction Icon Styling */
+        .instruction-icon {
+            position: fixed;
+            bottom: 20px;
+            right: 50px;
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 1001; /* Above other elements */
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .instruction-icon:hover {
+            background-color: #138496;
+            transform: scale(1.1);
+        }
+
+        .instruction-icon i {
+            font-size: 24px;
+        }
+
         .quiz-question h2 {
             font-size: 40px;
             font-weight: bold;
-            margin-bottom: 20px;
+            margin-bottom: 5px;
             background: rgba(255, 255, 255, 0.9);
             border-radius: 15px;
-            padding: 50px;
+            padding: 30px;
             text-align: center;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
+
+/* Position the image at the left bottom of the button */
+.option-image {
+    position: absolute;
+    left: 10px;      /* Adjust horizontal position */
+    bottom: 10px;    /* Adjust vertical position */
+    width: 70px;     /* Adjust size as needed */
+    height: 70px;    /* Adjust size as needed */
+    /* Optional: Add any additional styling like background, border, etc. */
+}
+
         .quiz-options {
-            margin-top: 10%;
+            margin-top: 5%;
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 40px;
         }
 
         .quiz-option {
+            position: relative;
+            /* Existing styles */
             font-size: 30px;
             padding: 70px;
             border: none;
@@ -78,8 +125,8 @@
             color: white;
             width: 100%;
             text-align: center;
+            /* Add any other existing styles here */
         }
-
         .quiz-option:hover {
             transform: scale(1.1);
         }
@@ -205,18 +252,37 @@
         #quiz-end {
             display: none; /* Hide by default until quiz ends */
         }
+
+
+       .video-container {
+            display: none; /* Hide the video feed */
+        }
+      /* Adjust Close Button in Modal */
+      .modal-header {
+          display: flex;
+          justify-content: flex-end; /* Align close button to the right */
+      }
+
+          .modal-content {
+      border-radius: 15px;
+  }
     </style>
 </head>
 
 <body>
     <div class="container mt-4">
         <div id="quiz-info" data-child-id="{{ childID }}" data-quiz-id="{{ quiz.quizID }}"></div>
+        <!-- Home Button -->
         <a href="{% url 'child_home' childID=childID %}" class="home-button" id="homeButton">
             <button style="background: transparent; border: none;">
                 <img src="https://img.icons8.com/material-rounded/24/ffffff/home.png" alt="Home">
             </button>
         </a>
-        <div class="text-center mb-4">
+        <!-- Instruction Icon -->
+        <button class="instruction-icon" id="instructionIcon" aria-label="Show Instructions">
+            <i class="fa fa-info-circle"></i>
+        </button>
+        <div class="text-center ">
             <h1>{{ quiz.title }}</h1>
         </div>
 
@@ -236,10 +302,26 @@
                     <h2>{{ question_data.question.question }}</h2>
                     <div class="quiz-options">
                         {% for option in question_data.question.options.all %}
-                        <button class="quiz-option btn-color-{{ forloop.counter }}" id="option-{{ option.optionID }}" onclick="checkAnswer('{{ question_data.question.quizQuestionID }}', '{{ option.optionID }}', {{ forloop.parentloop.counter }})">
-                            {{ option.text }}
-                        </button>
+                            <button
+                                class="quiz-option btn-color-{{ forloop.counter }}"
+                                id="option-{{ option.optionID }}"
+                                onclick="checkAnswer('{{ question_data.question.quizQuestionID }}', '{{ option.optionID }}', {{ forloop.parentloop.counter }})">
+                                <!-- Option Text -->
+                                <span class="option-text">{{ option.text }}</span>
+
+                                <!-- Conditional Image Insertion -->
+                                {% if forloop.counter == 1 %}
+                                    <img src="{% static 'image/one.png' %}" class="option-image" alt="Option 1">
+                                {% elif forloop.counter == 2 %}
+                                    <img src="{% static 'image/two1.png' %}" class="option-image" alt="Option 2">
+                                {% elif forloop.counter == 3 %}
+                                    <img src="{% static 'image/three1.png' %}" class="option-image" alt="Option 3">
+                                {% elif forloop.counter == 4 %}
+                                    <img src="{% static 'image/four1.png' %}" class="option-image" alt="Option 4">
+                                {% endif %}
+                            </button>
                         {% endfor %}
+
                     </div>
                 </div>
                 {% endfor %}
@@ -250,14 +332,35 @@
                         <p id="quiz-comment" class="score-comment"></p>
                     </div>
                 </div>
-                <div class="webcam-feed">
-                    <img id="webcamStream" src="{% url 'video_feed' %}" alt="Webcam Stream">
-                 </div>
+
             </div>
         </div>
     </div>
 
+
+<!-- Instruction Modal -->
+    <div class="modal fade" id="instructionModal" tabindex="-1" aria-labelledby="instructionModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <!-- Modal Header with Close Button -->
+          <div class="modal-header">
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <!-- Modal Body with Instruction Image and Text -->
+          <div class="modal-body text-center">
+            <img src="{% static 'image/quizInstruction.png' %}" alt="Gesture Instructions" class="img-fluid">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="video-container">
+        <!-- Load video feed from the video_feed endpoint -->
+        <img src="{% url 'video_feed' %}" alt="Real-time Video Feed">
+    </div>
+    <!-- Bootstrap JS Bundle (Includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Existing JavaScript code for the quiz
         let currentQuestion = 1;
         let correctAnswers = 0;
         let answeredQuestionsCount = 0;
@@ -295,26 +398,61 @@
         }
 
         function navigateQuestion(direction) {
-            document.getElementById(`question-${currentQuestion}`).style.display = 'none';
+            // Hide the current question or the score page
+            if (currentQuestion <= totalQuestions) {
+                document.getElementById(`question-${currentQuestion}`).style.display = 'none';
+            } else {
+                document.getElementById('quiz-end').style.display = 'none'; // Hide score page
+            }
+
             currentQuestion += direction;
 
-            if (currentQuestion < 1) currentQuestion = 1;
+            // Prevent navigating before the first question
+            if (currentQuestion < 1) {
+                currentQuestion = 1;
+                return;
+            }
+
+            // Handle navigation to the score page
             if (currentQuestion > totalQuestions) {
-                // If the next button is pressed on the last question, show the result
                 showFinalResult();
                 return;
             }
 
-            document.getElementById(`question-${currentQuestion}`).style.display = 'block';
+            // Show the new question
+            const currentQuestionElement = document.getElementById(`question-${currentQuestion}`);
+            currentQuestionElement.style.display = 'block';
 
+            // Update the "Previous" button visibility
             document.getElementById('prevPage').style.display = currentQuestion === 1 ? 'none' : 'block';
-            document.getElementById('nextPage').style.display = currentQuestion === totalQuestions ? 'block' : 'block';
+
+            // Handle "Next" button visibility
+            const nextButton = document.getElementById('nextPage');
+            if (currentQuestion === totalQuestions) {
+                // For the last question, check if it is answered
+                const currentOptions = document.querySelectorAll(`#question-${currentQuestion} .quiz-option`);
+                const isAnswered = Array.from(currentOptions).some(option => option.classList.contains('btn-selected'));
+
+                if (isAnswered) {
+                    nextButton.style.display = 'block'; // Show "Next" button if answered
+                } else {
+                    nextButton.style.display = 'none'; // Hide "Next" button if not answered
+                }
+            } else {
+                // For previous or intermediate questions, check if they were already answered
+                const isAnswered = answeredQuestions[currentQuestion];
+                nextButton.style.display = isAnswered ? 'block' : 'none'; // Show "Next" button if answered
+            }
         }
+
 
         function updateProgressBar() {
             const progress = (answeredQuestionsCount / totalQuestions) * 100;
             document.getElementById('progress-bar').style.width = `${progress}%`;
         }
+
+        // Track the start time globally
+        let quizStartTime = Date.now();
 
         function saveQuizResult(score, correctAnswers) {
             const childID = "{{ childID }}";
@@ -324,6 +462,10 @@
                 console.error("Invalid childID or quizID. Cannot save the quiz result.");
                 return;
             }
+
+            // Calculate the time spent in seconds
+            const quizEndTime = Date.now();
+            const timeSpent = Math.floor((quizEndTime - quizStartTime) / 1000); // Convert milliseconds to seconds
 
             fetch(`/quizzes/save_result/`, {
                 method: 'POST',
@@ -335,7 +477,8 @@
                     childID: childID,
                     quizID: quizID,
                     score: score,
-                    correct_answers: correctAnswers
+                    correct_answers: correctAnswers,
+                    timeSpent: timeSpent // Add the time spent to the payload
                 })
             })
             .then(response => response.json())
@@ -351,15 +494,17 @@
             });
         }
 
+
         function showFinalResult() {
             const score = Math.round((correctAnswers / totalQuestions) * 100);
             document.getElementById('quiz-end').style.display = 'block'; // Show the result box
-         //   document.getElementById(`question-${currentQuestion}`).style.display = 'none'; // Hide the last question
-            document.getElementById('nextPage').style.display = 'none'; // Hide the next button once result is shown
-            document.getElementById('prevPage').style.display = 'none'; // Hide the next button once result is shown
-            document.getElementById('quiz-score').innerText = `You scored ${score}%.`;
-            displayScoreMessage(score); // Display custom message
+            document.getElementById('quiz-score').innerText = `You scored ${score}%.`; // Update the score display
+            displayScoreMessage(score); // Display a custom message based on the score
             saveQuizResult(score, correctAnswers); // Save the quiz result to the server
+
+            // Hide navigation buttons on the score page
+            document.getElementById('nextPage').style.display = 'none';
+            document.getElementById('prevPage').style.display = 'block'; // Ensure "Previous" is visible
         }
 
         function displayScoreMessage(score) {
@@ -379,58 +524,138 @@
         document.getElementById('prevPage').style.display = 'none';
         document.getElementById('nextPage').style.display = 'none';
 
-function pollForGesture() {
-    fetch("{% url 'get_last_gesture' %}")
-        .then(response => response.json())
-        .then(data => {
-            const gestureClass = data.gesture_class;
-            if (gestureClass !== null) {  // Only call if there's a new gesture
-                handleGesture(gestureClass);
+    const GESTURE_CLASSES = {
+        NEXT: 7,     // 'H' Gesture (Next)
+        PREVIOUS: 6  // 'G' Gesture (Previous)
+    };
+
+    function pollForGesture() {
+        fetch("{% url 'get_last_gesture' %}")
+            .then(response => response.json())
+            .then(data => {
+                const gestureClass = data.gesture_class;
+                if (gestureClass !== null) {  // Only call if there's a new gesture
+                    handleGesture(gestureClass);
+                }
+            })
+            .catch(error => console.error('Error polling for gesture:', error));
+    }
+
+
+        // Poll the server every 4000ms to check for gestures
+        setInterval(pollForGesture, 4000);
+    function handleGesture(class_id) {
+        if (class_id >= 1 && class_id <= 4) {
+            onGestureDetected(class_id); // Handle answer selection gestures
+        } else if (class_id === GESTURE_CLASSES.NEXT) {
+            console.log("Detected Next Gesture: Class 7");
+
+            // Check if the "Next" button is visible before triggering it
+            const nextButton = document.getElementById('nextPage');
+            if (nextButton && nextButton.style.display !== 'none') {
+                nextButton.click(); // Trigger "Next" button click only if it's visible
+            } else {
+                console.warn("Next action blocked. Question not answered or button hidden.");
             }
-        })
-        .catch(error => console.error('Error polling for gesture:', error));
-}
+        } else if (class_id === GESTURE_CLASSES.PREVIOUS) {
+            console.log("Gesture for PREVIOUS detected.");
 
-
-    // Poll the server every 500ms to check for gestures
-    setInterval(pollForGesture, 500);
-
-        function handleGesture(class_id) {
-            if (class_id >= 1 && class_id <= 4) {
-                onGestureDetected(class_id);
+            // Allow triggering the "Previous" button regardless of state
+            const prevButton = document.getElementById('prevPage');
+            if (prevButton && prevButton.style.display !== 'none') {
+                prevButton.click(); // Trigger "Previous" button click if it's visible
+            } else {
+                console.warn("Previous action blocked. Button is hidden.");
             }
+        } else if (class_id === 8) {
+            console.log("Gesture for REDIRECT detected.");
+            redirectToProfilePage(); // Handle Class 8 action (redirect)
+        }    else if (class_id === 5) {
+        closeInstructionModal();
+          }
+    }
+
+
+    function redirectToProfilePage() {
+      window.location.href = '{% url 'child_home' childID=childID %}';  // Redirect to 'choose_profile' URL
+    }
+
+    function onGestureDetected(gestureClass) {
+        const options = document.querySelectorAll(`#question-${currentQuestion} .quiz-option`);
+        console.log(`Detected gesture class: ${gestureClass}`);
+        console.log('Available options:', options);
+
+        // Check if an option is already selected
+        const alreadySelected = Array.from(options).some(option => option.classList.contains('btn-selected'));
+        if (alreadySelected) {
+            console.warn("An option is already selected. Cannot change the selection.");
+            return; // Exit the function if an option is already selected
         }
 
-function onGestureDetected(gestureClass) {
-    const options = document.querySelectorAll(`#question-${currentQuestion} .quiz-option`);
-    console.log(`Detected gesture class: ${gestureClass}`);
-    console.log('Available options:', options);
+        // Ensure there is an option corresponding to the gesture class (1-based index)
+        if (options.length >= gestureClass && gestureClass > 0) {
+            // Select the option based on the gesture class
+            const selectedOption = options[gestureClass - 1]; // gestureClass is 1-based
+            selectedOption.classList.add('btn-selected');  // Apply selection styling for visibility
 
-    // Ensure there is an option corresponding to the gesture class (1-based index)
-    if (options.length >= gestureClass && gestureClass > 0) {
-        // Clear previous selections for a clean slate
-        options.forEach(option => option.classList.remove('btn-selected', 'btn-correct', 'btn-incorrect'));
+            // Log the selected option for debugging
+            console.log(`Selected option ID: ${selectedOption.id}`);
 
-        // Select the option based on the gesture class
-        const selectedOption = options[gestureClass - 1]; // gestureClass is 1-based
-        selectedOption.classList.add('btn-selected');  // Apply selection styling for visibility
+            // Trigger the answer checking function
+            checkAnswer(
+                document.getElementById(`question-${currentQuestion}`).dataset.correctOption,
+                selectedOption.id.replace('option-', ''),  // Extract option ID for answer checking
+                currentQuestion
+            );
+        } else {
+            console.warn("Gesture class does not correspond to an available option.");
+        }
+    }
 
-        // Log the selected option for debugging
-        console.log(`Selected option ID: ${selectedOption.id}`);
 
-        // Trigger the answer checking function
-        checkAnswer(
-            document.getElementById(`question-${currentQuestion}`).dataset.correctOption,
-            selectedOption.id.replace('option-', ''),  // Extract option ID for answer checking
-            currentQuestion
-        );
-    } else {
-        console.warn("Gesture class does not correspond to an available option.");
+    /* **New JavaScript for Instruction Modal and Icon** */
+document.addEventListener('DOMContentLoaded', function() {
+    const instructionIcon = document.getElementById('instructionIcon');
+    if (instructionIcon) {
+        instructionIcon.addEventListener('click', function() {
+            var instructionModal = new bootstrap.Modal(document.getElementById('instructionModal'), {
+                backdrop: 'static',
+                keyboard: false
+            });
+            instructionModal.show();
+        });
+    }
+
+    // Handle Instruction Modal Display Based on URL Parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const showInstructions = urlParams.get('show_instructions');
+
+       if (showInstructions === 'true') {
+        var instructionModal = new bootstrap.Modal(document.getElementById('instructionModal'), {
+            backdrop: 'static',
+            keyboard: false
+        });
+        instructionModal.show();
+
+
+
+        // Remove 'show_instructions' parameter from URL
+        const url = new URL(window.location);
+        url.searchParams.delete('show_instructions');
+        window.history.replaceState({}, document.title, url.pathname + url.search);
+    }
+});
+function closeInstructionModal() {
+    var instructionModalElement = document.getElementById('instructionModal');
+    var instructionModal = bootstrap.Modal.getInstance(instructionModalElement);
+    if (instructionModal) {
+        instructionModal.hide();
     }
 }
 
+
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 
 </html>

@@ -1,7 +1,7 @@
 # component/eduMaterial/views.py
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
-from .models import ChildEduMaterial, EducationalMaterial
+from .models import ChildEduMaterial, EducationalMaterial, ChildEduMaterialLog
 from component.user.models import Child
 from django.views.decorators.csrf import csrf_exempt
 import uuid
@@ -19,7 +19,6 @@ def book_viewer(request, childID, eduMaterialID):
     return render(request, 'book.html', {'book_url': book_url, 'childID': childID, 'eduMaterialID': eduMaterialID, 'book_title': book.title})
 
 from django.utils import timezone
-
 
 
 @csrf_exempt
@@ -71,6 +70,16 @@ def record_time_spent(request, childID, eduMaterialID):
             child_edu_material.timeSpent += time_spent_duration
             child_edu_material.save()
 
+            # Now log the access in ChildEduMaterialAccess
+            child_edu_material_log = ChildEduMaterialLog.objects.create(
+                childEduMaterialLogID=str(uuid.uuid4()),
+                child=child,
+                edu_material=edu_material,
+                access_date=timezone.now(),  # Record the exact date and time of access
+                time_spent=time_spent_duration  # Store the time spent on this access event
+            )
+            print(f"Created new ChildEduMaterialAccess record: {child_edu_material_log}")
+
             # Return the total time spent in seconds (converted back from timedelta)
             total_time_spent_seconds = child_edu_material.timeSpent.total_seconds()
             print(f"Total time spent (in seconds): {total_time_spent_seconds}")
@@ -90,3 +99,4 @@ def record_time_spent(request, childID, eduMaterialID):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+

@@ -13,3 +13,4 @@ class UserConfig(AppConfig):
                           args=['send_subscription_reminders'])  # Run daily at 8:00 AM
         print("UserConfig is ready")
         scheduler.start()
+

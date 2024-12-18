@@ -3,7 +3,7 @@
 import uuid
 
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
-from datetime import timedelta
+from datetime import timedelta, date
 from django.db import models
 from django.utils import timezone
 
@@ -107,10 +107,19 @@ class Child(models.Model):
         null=True,  # Allow NULL in the database
     )
     name = models.CharField(max_length=255)
-    age = models.IntegerField()
-    parent = models.ForeignKey(Parent, on_delete=models.CASCADE, related_name='children')
+    birthday = models.DateField(null=True) # Changed from 'age' to 'birthday' to store the child's birthdate
+    parent = models.ForeignKey('Parent', on_delete=models.CASCADE, related_name='children')
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
 
+    def get_age(self):
+        if self.birthday:  # Check if the birthday is not None
+            today = date.today()
+            age = today.year - self.birthday.year
+            # Check if the birthday hasn't occurred yet this year
+            if (today.month, today.day) < (self.birthday.month, self.birthday.day):
+                age -= 1
+            return age
+        return None  # Return None if birthday is not set

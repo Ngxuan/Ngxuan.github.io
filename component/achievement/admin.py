@@ -5,11 +5,16 @@ from django.contrib import admin
 from .models import Achievement, ChildAchievement
 from component.supabase_client import upload_file_to_supabase
 from component.quiz.models import Quiz  # Importing QuizType from the correct module
+from component.eduMaterial.models import EducationalMaterial
 
-# Create a custom form for the Achievement model
 class AchievementAdminForm(forms.ModelForm):
     upload_thumbnail = forms.FileField(required=False, label='Upload Thumbnail to Supabase')
-    quiz_title = forms.ModelChoiceField(queryset=Quiz.objects.all(), required=False, label='Quiz Title')  # Change to Quiz model for quiz_title
+    quiz_title = forms.ModelChoiceField(queryset=Quiz.objects.all(), required=False, label='Quiz Title')  # For quiz type
+    video_title = forms.ModelChoiceField(
+        queryset=EducationalMaterial.objects.filter(type='video'),
+        required=False,
+        label='Video Title'
+    )  # For video type
 
     class Meta:
         model = Achievement
@@ -20,18 +25,36 @@ class AchievementAdminForm(forms.ModelForm):
 
         # Check if the instance is already created (i.e., editing an existing achievement)
         if self.instance and self.instance.pk:
-            # If the type is 'quiz', make quiz_type required and visible
             if self.instance.type == 'quiz':
-                self.fields['quiz_title'].required = True  # Make quiz_type required
+                # For quiz type
+                self.fields['quiz_title'].required = True  # Make quiz_title required
+                self.fields['video_title'].widget = forms.HiddenInput()  # Hide video_title field
+            elif self.instance.type == 'video':
+                # For video type
+                self.fields['video_title'].required = True  # Make video_title required
+                self.fields['quiz_title'].widget = forms.HiddenInput()  # Hide quiz_title field
             else:
-                self.fields['quiz_title'].required = False  # Otherwise, not required
-                self.fields['quiz_title'].widget = forms.HiddenInput()  # Hide the field if not a quiz type
+                # For other types, hide both fields
+                self.fields['quiz_title'].widget = forms.HiddenInput()
+                self.fields['video_title'].widget = forms.HiddenInput()
         else:
             # If creating a new instance, check if type is provided in POST data
-            if 'type' in self.data and self.data['type'] == 'quiz':
-                self.fields['quiz_title'].required = True  # Make quiz_type required for new quizzes
+            if 'type' in self.data:
+                if self.data['type'] == 'quiz':
+                    self.fields['quiz_title'].required = True  # Make quiz_title required for new quizzes
+                    self.fields['video_title'].widget = forms.HiddenInput()  # Hide video_title field
+                elif self.data['type'] == 'video':
+                    self.fields['video_title'].required = True  # Make video_title required for new videos
+                    self.fields['quiz_title'].widget = forms.HiddenInput()  # Hide quiz_title field
+                else:
+                    # Hide both fields if type is not quiz or video
+                    self.fields['quiz_title'].widget = forms.HiddenInput()
+                    self.fields['video_title'].widget = forms.HiddenInput()
             else:
-                self.fields['quiz_title'].widget = forms.HiddenInput()  # Hide the field initially
+                # Hide both fields initially if no type is provided
+                self.fields['quiz_title'].widget = forms.HiddenInput()
+                self.fields['video_title'].widget = forms.HiddenInput()
+
 
 # Create the Achievement admin class with support for Supabase uploads
 class AchievementAdmin(admin.ModelAdmin):
@@ -39,7 +62,7 @@ class AchievementAdmin(admin.ModelAdmin):
     list_display = ('title', 'description', 'criteria', 'status', 'thumbnail_url', 'type', 'completion_metric')
     list_filter = ('status', 'type', 'completion_metric')  # Add filters for type and completion_metric
     search_fields = ('title', 'description')
-    fields = ('title', 'description', 'criteria', 'status', 'thumbnail_url', 'upload_thumbnail', 'type', 'quiz_title', 'completion_metric')  # Include quiz_type in fields
+    fields = ('title', 'description', 'criteria', 'status', 'thumbnail_url', 'upload_thumbnail', 'type', 'quiz_title','video_title', 'completion_metric')  # Include quiz_type in fields
     readonly_fields = ('thumbnail_url',)  # Make thumbnail_url readonly
 
     def save_model(self, request, obj, form, change):
@@ -80,12 +103,7 @@ class AchievementAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 
-# Admin class for ChildAchievement
-class ChildAchievementAdmin(admin.ModelAdmin):
-    list_display = ('child', 'achievement', 'complete')  # Display these fields
-    list_filter = ('complete',)  # Filter options for completion status
-    search_fields = ('child__name', 'achievement__title')  # Allow searching by child's name and achievement title
 
 
 admin.site.register(Achievement, AchievementAdmin)
-admin.site.register(ChildAchievement, ChildAchievementAdmin)
+

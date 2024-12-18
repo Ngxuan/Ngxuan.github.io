@@ -14,32 +14,35 @@ def create_subscription_payment(request, plan_id):
     parent = request.user  # The authenticated Parent instance
     host = request.get_host()
 
-    # Fetch the subscription plan using plan_id
-    plan = get_object_or_404(SubscriptionPlan, id=plan_id)
+    # Fetch all subscription plans for the left panel
+    plans = SubscriptionPlan.objects.all().order_by('price')
 
-    # Define PayPal payment details
+    # Fetch the selected subscription plan for the right panel
+    selected_plan = get_object_or_404(SubscriptionPlan, id=plan_id)
+
+    # Define PayPal payment details for the selected plan
     payment_data = {
         'business': settings.PAYPAL_RECEIVER_EMAIL,
-        'amount': str(plan.price),
-        'item_name': f'Subscription - {plan.plan_name}',
+        'amount': str(selected_plan.price),
+        'item_name': f'Subscription - {selected_plan.plan_name}',
         'invoice': str(uuid.uuid4()),
         'currency_code': 'MYR',
         'notify_url': f'http://{host}{reverse("payment:paypal-ipn")}',
-        'return_url': f'http://{host}{reverse("payment:subscription_successful", kwargs={"plan_id": plan.id})}',
-        'cancel_url': f'http://{host}{reverse("payment:subscription_failed", kwargs={"plan_id": plan.id})}',
+        'return_url': f'http://{host}{reverse("payment:subscription_successful", kwargs={"plan_id": selected_plan.id})}',
+        'cancel_url': f'http://{host}{reverse("payment:subscription_failed", kwargs={"plan_id": selected_plan.id})}',
     }
 
     # Create the PayPal form
     paypal_payment_form = PayPalPaymentsForm(initial=payment_data)
 
-    # Pass the form to the template
+    # Pass the plans and selected plan to the template
     context = {
-        'plan': plan,
-        'paypal_redirect_url': paypal_payment_form,
+        'plans': plans,  # All available plans for the left panel
+        'selected_plan': selected_plan,  # Selected plan details for the right panel
+        'paypal_redirect_url': paypal_payment_form,  # PayPal form for payment
     }
 
     return render(request, 'checkout.html', context)
-
 
 def subscription_successful(request, plan_id):
     """

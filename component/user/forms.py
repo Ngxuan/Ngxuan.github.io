@@ -1,4 +1,8 @@
+from datetime import date
+
 from django import forms
+from django.core.exceptions import ValidationError
+
 from .models import Parent
 from .models import Child
 import re
@@ -55,7 +59,26 @@ class ChildAccountForm(forms.ModelForm):
 
     class Meta:
         model = Child
-        fields = ['name', 'age', 'image']  # Fields for the child's information
+        fields = ['name', 'birthday', 'image']  # Fields for the child's information
+
+    def clean_birthday(self):
+        birthday = self.cleaned_data.get('birthday')
+        if not birthday:
+            return birthday
+
+        # Get today's date
+        today = date.today()
+
+        # Calculate age by comparing birthday with today's date
+        age_in_days = (today - birthday).days
+        age_in_years = age_in_days / 365.25  # To account for leap years
+
+        if age_in_years < 1:
+            raise forms.ValidationError("The child must be at least 1 year old.")
+        if age_in_years > 5:
+            raise forms.ValidationError("The child cannot be older than 5 year old.")
+
+        return birthday
 
 
 class ParentDetailForm(forms.ModelForm):

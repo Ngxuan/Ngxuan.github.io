@@ -77,7 +77,14 @@
         .section h2 {
             margin-top: 0;
             text-align: center;
-            font-size: 24px;
+            font-size: 30px;
+            color: #333;
+        }
+
+        .section p {
+            margin-top: 0;
+            text-align: center;
+            font-size: 20px;
             color: #333;
         }
 
@@ -267,7 +274,7 @@ h3 {
 /* Modal content box */
 .modal-content {
     background-color: #FFF;
-    margin: 10% auto; /* Adjust margin-top to move the form higher */
+    margin: 7% auto; /* Adjust margin-top to move the form higher */
     padding: 20px;
     border-radius: 10px;
     width: 80%;
@@ -331,6 +338,54 @@ h3 {
 background-color: #333;
 }
 
+.time-filter {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.error-messages {
+    margin-top: 15px;
+    padding: 5px;
+    border-radius: 4px;
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    display: none;  /* Hidden by default, shown when errors occur */
+}
+.success-message {
+    position: fixed;  /* Fixes the message at the top of the page */
+    top: 80px;        /* Adjust the distance from the top */
+    left: 50%;
+    transform: translateX(-50%); /* Centers the message horizontally */
+    background-color: #4CAF50;  /* Green background */
+    color: white;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    font-size: 16px;
+    text-align: center;
+    font-weight: bold;
+    z-index: 1000;  /* Ensures it's above other content */
+    display: none;  /* Initially hidden */
+    opacity: 0;     /* Start with 0 opacity for fade-in effect */
+    transition: opacity 0.5s ease; /* Smooth fade-in effect */
+}
+
+.success-message.show {
+    display: block;  /* Makes the message visible */
+    opacity: 1;      /* Fades in the message */
+}
+
+.success-message.hide {
+    display: none;
+}
+
+.custom-date-fields {
+
+    margin-top: 20px;               /* Space above the custom date fields */
+    margin-bottom: 20px;            /* Space below the custom date fields */
+     text-align: center;
+}
 
     </style>
 </head>
@@ -338,7 +393,7 @@ background-color: #333;
 
     <!-- Header Section -->
     <div class="header">
-        <a href="javascript:void(0);" class="back-button" onclick="history.back();">
+         <a href="{% url 'parent_dashboard' %}" class="back-button" >
             <i class="fa fa-arrow-left"></i>
         </a>
         <h1>Child Progress</h1>
@@ -346,6 +401,9 @@ background-color: #333;
 
     <!-- Main Container -->
     <div class="container">
+        <div id="successMessage" class="success-message hide"></div>
+
+
         <!-- Profile Section -->
 <div class="profilesection">
     <h2 style="text-align: left; display: inline-block;">Profile</h2>
@@ -353,11 +411,17 @@ background-color: #333;
     <a href="javascript:void(0);" class="edit-icon" onclick="openModal()">
         <i class="fas fa-pen"></i>
     </a>
+
     <div class="profile-section">
         <img class="profile-image" src="{% if child.image %}{{ child.image }}{% else %}{% static 'image/childProfile.png' %}{% endif %}" alt="{{ child.name }}">
         <div class="profile-details">
             <p>Name: <strong>{{ child.name }}</strong></p>
-            <p>Age: <strong>{{ child.age }} years old</strong></p>
+            {% if child.get_age %}
+                <p>Age: <strong>{{ child.get_age }} years old</strong></p>
+            {% else %}
+                <p>Age: <strong>Not available</strong></p>
+            {% endif %}
+
         </div>
     </div>
 </div>
@@ -368,6 +432,10 @@ background-color: #333;
     <div class="modal-content">
         <span class="close" onclick="closeModal()">&times;</span>
         <h2>Edit Child Info</h2>
+<div id="errorMessages" class="error-messages" ></div>  <!-- Div to show error messages -->
+
+
+
         <form id="editForm" action="{% url 'update_child_profile' child.childID %}" method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             <label for="profileImage">Profile Image:</label>
@@ -378,7 +446,8 @@ background-color: #333;
             <input type="text" id="childName" name="name" value="{{ child.name }}" required>
 
             <label for="childAge">Age:</label>
-            <input type="number" id="childAge" name="age" value="{{ child.age }}" required>
+            <input type="date" id="childAge" name="birthday" value="{{ child.birthday|date:'Y-m-d' }}" required>
+
 
             <button type="submit" class="save-button">Save</button>
         </form>
@@ -386,29 +455,59 @@ background-color: #333;
 </div>
 
         <!-- Time Spent Report Section -->
-        <div class="section">
-            <h2>Time Spent Report of {{ child.name }}</h2>
-            <div class="time-report">
-                <div class="report-item">
-                    <canvas id="bookChart"></canvas>
-                    <p>Book</p>
-                </div>
-                <div class="report-item">
-                    <canvas id="videoChart"></canvas>
-                    <p>Video</p>
-                </div>
-                <div class="report-item">
-                    <canvas id="quizChart"></canvas>
-                    <p>Quiz</p>
-                </div>
-                <div class="report-item">
-                    <canvas id="gameChart"></canvas>
-                    <p>Game</p>
-                </div>
-            </div>
-            <p>Total Time Spent: <strong>0 hr 0 min</strong></p>
-        </div>
+<!-- childDetail.html -->
+<div class="section">
 
+    <div class="time-filter">
+        <select id="time-filter" class="filter-select" onchange="filterTimePeriod()">
+            <option value="daily" {% if time_filter == 'daily' %}selected{% endif %}>Daily</option>
+            <option value="weekly" {% if time_filter == 'weekly' %}selected{% endif %}>Weekly</option>
+            <option value="monthly" {% if time_filter == 'monthly' %}selected{% endif %}>Monthly</option>
+            <option value="custom" {% if time_filter == 'custom' %}selected{% endif %}>Custom</option>
+        </select>
+    </div>
+
+    <h2>Time Spent Report of {{ child.name }}</h2>
+    <p>
+        <strong>{{ formatted_start_date }}</strong> to <strong>{{ formatted_end_date }}</strong>
+        {% if time_filter != 'custom' %}
+            <strong>({{ time_filter|title }})</strong>
+        {% endif %}
+    </p>
+
+    <!-- Custom Date Range Inputs -->
+    <div id="custom-date-fields" class="custom-date-fields" {% if time_filter != 'custom' %}style="display:none;"{% endif %}>
+        <label for="custom_start_date">Start Date:</label>
+        <input type="date" id="custom_start_date" name="custom_start_date" value="{{ custom_start_date }}">
+
+        <label for="custom_end_date">End Date:</label>
+        <input type="date" id="custom_end_date" name="custom_end_date" value="{{ custom_end_date }}">
+
+        <button type="button" onclick="applyCustomFilter()">Apply</button>
+    </div>
+
+    <div class="time-report">
+        <div class="report-item">
+            <canvas id="bookChart"></canvas>
+            <p>Book</p>
+        </div>
+        <div class="report-item">
+            <canvas id="videoChart"></canvas>
+            <p>Video</p>
+        </div>
+        <div class="report-item">
+            <canvas id="quizChart"></canvas>
+            <p>Quiz</p>
+        </div>
+        <div class="report-item">
+            <canvas id="gameChart"></canvas>
+            <p>Game</p>
+        </div>
+    </div>
+<p>Total Time Spent: <strong>{{ total_time_spent_hours|floatformat:0 }} hr {{ total_time_spent_minutes|floatformat:0 }} min</strong></p>
+
+
+</div>
         <!-- Quiz Score Report Section -->
 
    <!-- Quiz Score Report Section -->
@@ -455,6 +554,57 @@ background-color: #333;
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script>
 
+   function filterTimePeriod() {
+        const timePeriod = document.getElementById('time-filter').value;
+        const url = new URL(window.location.href);
+
+        if (timePeriod === 'custom') {
+            // Show custom date fields
+            document.getElementById('custom-date-fields').style.display = 'block';
+        } else {
+            // Hide custom date fields and remove custom date parameters
+            document.getElementById('custom-date-fields').style.display = 'none';
+            url.searchParams.delete('custom_start_date');
+            url.searchParams.delete('custom_end_date');
+            url.searchParams.set('time_filter', timePeriod);
+            window.location.href = url.toString();
+        }
+    }
+
+    function applyCustomFilter() {
+        const timePeriod = 'custom';
+        const customStartDate = document.getElementById('custom_start_date').value;
+        const customEndDate = document.getElementById('custom_end_date').value;
+
+        // Basic validation to ensure dates are selected
+        if (!customStartDate || !customEndDate) {
+            alert('Please select both start and end dates.');
+            return;
+        }
+
+        // Validate that start date is before end date
+        if (customStartDate > customEndDate) {
+            alert('Start date must be before or equal to end date.');
+            return;
+        }
+
+        const url = new URL(window.location.href);
+        url.searchParams.set('time_filter', timePeriod);
+        url.searchParams.set('custom_start_date', customStartDate);
+        url.searchParams.set('custom_end_date', customEndDate);
+
+        console.log("Updated URL with custom dates: " + url.toString());
+        window.location.href = url.toString();
+    }
+
+    // Optional: Show custom date fields on page load if 'custom' is selected
+    document.addEventListener('DOMContentLoaded', function() {
+        const timePeriod = document.getElementById('time-filter').value;
+        if (timePeriod === 'custom') {
+            document.getElementById('custom-date-fields').style.display = 'block';
+        }
+    });
+
       function filterQuizzes() {
             // Get selected quiz type
             const selectedType = document.getElementById('quiz-type-filter').value;
@@ -476,7 +626,7 @@ const timeSpentData = {
     book: { time: {{ book_time }}, color: '#98FB98' },
     video: { time: {{ video_time }}, color: '#87CEEB' },
     quiz: { time: {{ quiz_time }}, color: '#FF69B4' },
-    game: { time: {{ game_time }}, color: '#D3D3D3' }
+    game: { time: {{ game_time }}, color: '#A020F0' }
 };
 
 // Function to format time into a user-friendly format (like "13m" or "< 1m")
@@ -575,12 +725,18 @@ function previewImage(event) {
     reader.readAsDataURL(event.target.files[0]); // Read the selected file
 }
 
-// Form submission handling
+
 document.getElementById('editForm').addEventListener('submit', function(event) {
     event.preventDefault();  // Prevent the form from submitting normally
 
     const formData = new FormData(this);  // Create a FormData object to handle file uploads
     const childId = "{{ child.childID }}";  // Get the UUID of the child
+    const errorMessagesDiv = document.getElementById('errorMessages');  // Element to show error messages
+    const successMessageDiv = document.getElementById('successMessage');  // Element to show success message
+
+    // Clear previous error and success messages
+    errorMessagesDiv.innerHTML = '';
+    successMessageDiv.style.display = 'none';  // Hide the success message before submitting
 
     fetch(`/user/update_child/${childId}/`, {
         method: 'POST',
@@ -593,19 +749,72 @@ document.getElementById('editForm').addEventListener('submit', function(event) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(data.message);  // Display success message
-            closeModal();  // Close the modal
+            // Store success message in localStorage
+            localStorage.setItem('successMessage', data.message);  // Save the success message
+
+            // Close the modal first
+            closeModal();
 
             // Delay the page reload to ensure the modal closes first
             setTimeout(() => {
                 location.reload();  // Refresh the page to show updated data
             }, 500);  // 500 milliseconds delay
+
+            // Show success message at the top of the page
+            successMessageDiv.textContent = data.message;
+            successMessageDiv.classList.remove('hide');  // Make the message visible
+            successMessageDiv.classList.add('show');  // Apply fade-in effect
+
+            // Hide the success message after 2 seconds
+            setTimeout(() => {
+                successMessageDiv.classList.remove('show');  // Remove fade-in effect
+                successMessageDiv.classList.add('hide');    // Hide the message
+            }, 3000);  // 2000 milliseconds (2 seconds) delay
         } else {
-            alert('Error updating profile: ' + JSON.stringify(data.errors));
+            // Handle and display errors in the UI
+            errorMessagesDiv.style.display = 'block';  // Show error messages div
+            successMessageDiv.style.display = 'none';  // Hide success message if there are errors
+
+            data.errors.forEach(error => {
+                const errorMessage = document.createElement('p');
+                errorMessage.textContent = error;
+                errorMessagesDiv.appendChild(errorMessage);
+            });
         }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+        // Display network or server error
+        errorMessagesDiv.style.display = 'block';  // Show error messages div
+        const errorMessage = document.createElement('p');
+        errorMessage.textContent = 'An unexpected error occurred. Please try again later.';
+        errorMessagesDiv.appendChild(errorMessage);
+        console.error('Error:', error);
+    });
 });
+
+window.addEventListener('load', function() {
+    const successMessageDiv = document.getElementById('successMessage');  // Element to show success message
+
+    // Check if the success message exists in localStorage
+    const successMessage = localStorage.getItem('successMessage');
+
+    if (successMessage) {
+        // Set the success message
+        successMessageDiv.textContent = successMessage;
+        successMessageDiv.classList.remove('hide');  // Make the message visible
+        successMessageDiv.classList.add('show');  // Apply fade-in effect
+
+        // Clear the success message from localStorage
+        localStorage.removeItem('successMessage');
+
+        // Hide the success message after 2 seconds
+        setTimeout(() => {
+            successMessageDiv.classList.remove('show');  // Remove fade-in effect
+            successMessageDiv.classList.add('hide');    // Hide the message
+        }, 3000);  // 2000 milliseconds (2 seconds) delay
+    }
+});
+
 
 
     </script>

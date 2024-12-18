@@ -27,4 +27,5 @@ path('parent_dashboard_auth/', views.parent_dashboard_auth, name='parent_dashboa
     path('reset/<uidb64>/<token>/', views.CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='password_reset_confirm.html'),
          name='password_reset_complete'),
+path('delete_child/', views.delete_child_account, name='delete_child_account'),
 ]

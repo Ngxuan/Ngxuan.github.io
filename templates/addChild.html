@@ -118,6 +118,16 @@
         .save-button:hover {
             background-color: #333;
         }
+
+.error-message {
+    margin-top: 15px;
+    padding: 5px;
+    border-radius: 4px;
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+
+}
     </style>
 </head>
 <body>
@@ -133,7 +143,17 @@
 
     <div class="container">
         <h2>Create Child Profile</h2>
-
+        {% if form.errors %}
+            <div class="error-message">
+                <ul>
+                    {% for field in form %}
+                        {% if field.errors %}
+                            <li>{% for error in field.errors %} <span>{{ error }}</span> {% endfor %}</li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
         <!-- Profile Detail Form -->
         <form method="POST" enctype="multipart/form-data" id="addChildForm" action="{% url 'add_child_account' %}">
             {% csrf_token %}
@@ -151,7 +171,7 @@
                     </div>
                     <div class="form-group">
                         <label for="age">Age:</label>
-                        <input type="number" id="age" name="age" placeholder="Enter child's age" required>
+                        <input type="date" id="age" name="birthday" placeholder="Enter child's birthday" required>
                     </div>
                     <div class="form-group">
                         <label for="profileImage">Profile Image:</label>
